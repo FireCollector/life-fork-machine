@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "projectName": "知乎 AI 黑客松项目",
+  "projectSlug": "知乎-ai-黑客松项目",
+  "oauth": {
+    "enabled": false
+  },
+  "host": "127.0.0.1",
+  "port": 4173
+}

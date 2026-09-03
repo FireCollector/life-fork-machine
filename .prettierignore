@@ -1,0 +1,9 @@
+.next
+.npm-cache
+.codex
+node_modules
+coverage
+playwright-report
+test-results
+package-lock.json
+content/**/*.json

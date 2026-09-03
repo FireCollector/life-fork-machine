@@ -1,0 +1,218 @@
+{
+  "schemaVersion": 1,
+  "scenarioId": "startup",
+  "scenarioTitle": "年薪稳定但成长停滞，要不要跟领导辞职创业？",
+  "retrievedAt": "2026-09-01",
+  "source": "zhihu_open_platform",
+  "reviewPolicy": "community_experience_for_scenario_only",
+  "cards": [
+    {
+      "id": "zh-startup-01",
+      "contentId": "701596777091798474",
+      "title": "年薪60+万，一手提拔我的领导跟公司大老板有分歧，要我辞职跟他去创业，我该怎么办？",
+      "url": "https://www.zhihu.com/question/2075219931705119529/answer/2078066338405401492",
+      "author": "BY-Oliver",
+      "contentType": "Answer",
+      "stance": "conditional",
+      "categories": [
+        "oppose_direct_leap",
+        "validate_and_negotiate",
+        "family_cashflow"
+      ],
+      "claim": "知遇之恩不应替代尽职调查；决定前应索要书面商业计划、现金流、职责、股权兑现和退出安排。",
+      "conditions": [
+        "用户有较高稳定收入",
+        "用户存在伴侣、房贷、老人或孩子等共同风险承担者",
+        "邀请主要依赖领导与用户之间的信任关系"
+      ],
+      "consequence": "如果用感激代替核验，损失可能从工资扩展到再就业窗口、家庭现金流和关系资本。",
+      "authorityLevel": 2,
+      "rankingScore": 1.017795,
+      "voteUpCount": 0,
+      "reviewStatus": "approved_with_caution",
+      "reviewNote": "与主场景高度相关且包含具体核验项，但互动量低；只用于构造决策步骤，不视为普遍结论。"
+    },
+    {
+      "id": "zh-startup-02",
+      "contentId": "-3329193204715547953",
+      "title": "从普通打工人到投资大佬：他总结出适合普通人投资和创业的实操指南",
+      "url": "https://zhuanlan.zhihu.com/p/2066624585257194598",
+      "author": "深度思享社",
+      "contentType": "Article",
+      "stance": "conditional",
+      "categories": [
+        "support_entrepreneurship",
+        "validate_before_leap",
+        "cashflow"
+      ],
+      "claim": "先保留主业验证需求和收入，待副业现金流覆盖工资后再全职投入，可以保留创业上行同时限制下行风险。",
+      "conditions": [
+        "项目能以较低成本兼职验证",
+        "用户有可持续投入的业余时间",
+        "客户和收入可在辞职前被实际验证"
+      ],
+      "consequence": "延迟辞职能保住现金流和多次试错机会，但会带来一段时间的双线工作负荷。",
+      "authorityLevel": 3,
+      "rankingScore": 0.945577,
+      "voteUpCount": 1,
+      "reviewStatus": "approved_with_caution",
+      "reviewNote": "属于对他人访谈或经历的二次转述，不按第一手证词使用；适合作为搭桥试水分支的条件性样本。"
+    },
+    {
+      "id": "zh-startup-03",
+      "contentId": "4918624093870934363",
+      "title": "决策高手第5卷：跳槽、投资、创业——人生三大决策",
+      "url": "https://zhuanlan.zhihu.com/p/2069373488809374185",
+      "author": "陈总总",
+      "contentType": "Article",
+      "stance": "conditional",
+      "categories": [
+        "support_entrepreneurship",
+        "portfolio_strategy",
+        "validate_before_leap"
+      ],
+      "claim": "打工、投资和创业并非只能三选一；稳定现金流与创业期权可以组合，决策时应警惕幸存者偏差、沉没成本和头衔光环。",
+      "conditions": [
+        "用户仍可保留主业或稳定收入",
+        "创业验证不会违反竞业或保密约束",
+        "家庭拥有可量化的安全垫"
+      ],
+      "consequence": "组合策略保留职业选择权，但会牺牲短期时间、精力和推进速度。",
+      "authorityLevel": 4,
+      "rankingScore": 0.9379415,
+      "voteUpCount": 2,
+      "reviewStatus": "approved_with_caution",
+      "reviewNote": "属于决策观点文章而非统计研究；用于提示选择结构，不使用文中的比例或收益承诺。"
+    },
+    {
+      "id": "zh-startup-04",
+      "contentId": "-1527589235908409548",
+      "title": "从发不出工资到被迫离职，我经历了什么",
+      "url": "https://zhuanlan.zhihu.com/p/2020659644108944250",
+      "author": "打工人UN",
+      "contentType": "Article",
+      "stance": "oppose",
+      "categories": [
+        "equity_and_contract",
+        "cashflow",
+        "exit_signal"
+      ],
+      "claim": "作者描述创业公司现金链断裂、长期欠薪以及口头期权未获兑现的经历，强调书面约定、证据留存和及时止损。",
+      "conditions": [
+        "加入方以降薪换取未来期权",
+        "关键承诺没有写入正式文件",
+        "公司开始连续拖延工资或供应商付款"
+      ],
+      "consequence": "员工可能同时失去现金收入、期权预期和主动离开的时间窗口。",
+      "authorityLevel": 3,
+      "rankingScore": 0.9296888,
+      "voteUpCount": 2,
+      "reviewStatus": "approved_with_caution",
+      "reviewNote": "按作者个人案例使用；其中劳动法与仲裁描述未经本项目独立核验，不能作为法律建议。"
+    },
+    {
+      "id": "zh-startup-05",
+      "contentId": "-2326930445493738650",
+      "title": "大厂辞职后的绝境求生，如今年入千万：一位创业者的生存样本",
+      "url": "https://zhuanlan.zhihu.com/p/1969720369075164345",
+      "author": "上海市大学生科技创业基金会",
+      "contentType": "Article",
+      "stance": "support",
+      "categories": [
+        "support_entrepreneurship",
+        "dual_track",
+        "network_support"
+      ],
+      "claim": "案例中的创业者在首次失败后，依靠熟悉领域、人脉支持和“副业保现金流、主业做长期目标”的双轨结构重新启动。",
+      "conditions": [
+        "创业者拥有熟悉领域的可变现能力",
+        "存在可信任的合作网络",
+        "收入业务与长期项目可以被拆分管理"
+      ],
+      "consequence": "双轨结构可能同时获得现金流与价值感，但依赖特殊能力、网络和个人承受力，不能直接复制。",
+      "authorityLevel": 3,
+      "rankingScore": 0.9203643,
+      "voteUpCount": 1,
+      "reviewStatus": "approved_with_caution",
+      "reviewNote": "机构发布的正向个案，具有明显特殊性；用于展示创业的可能收益，不作为成功率证据。"
+    },
+    {
+      "id": "zh-startup-06",
+      "contentId": "-6131637294667657692",
+      "title": "裸辞创业失败，负债20万，我是如何爬出来的？",
+      "url": "https://zhuanlan.zhihu.com/p/2025954052047906435",
+      "author": "青梅煮茶",
+      "contentType": "Article",
+      "stance": "oppose",
+      "categories": [
+        "oppose_direct_leap",
+        "partnership",
+        "debt_and_recovery"
+      ],
+      "claim": "作者将裸辞、未签正式合伙协议和使用高息借款描述为失败的重要放大器，后来通过重新就业和副业逐步还债。",
+      "conditions": [
+        "项目尚未验证稳定收入",
+        "合伙人的责任、资金和退出没有书面约定",
+        "启动资金依赖高息个人借款"
+      ],
+      "consequence": "失败可能转化为长期债务、关系损耗和恢复期，重新就业与小规模副业则提供了可逆路径。",
+      "authorityLevel": 3,
+      "rankingScore": 0.90957737,
+      "voteUpCount": 0,
+      "reviewStatus": "approved_with_caution",
+      "reviewNote": "第一人称自述但互动量低，真实性未独立核验；只用于压力测试，不推广其借贷建议。"
+    },
+    {
+      "id": "zh-startup-07",
+      "contentId": "-2465109881022931459",
+      "title": "年薪60+万，一手提拔我的领导跟公司大老板有分歧，要我辞职跟他去创业，我该怎么办？",
+      "url": "https://www.zhihu.com/question/2075219931705119529/answer/2078082963938590839",
+      "author": "鸭白眉",
+      "contentType": "Answer",
+      "stance": "conditional",
+      "categories": [
+        "oppose_direct_leap",
+        "validate_and_negotiate",
+        "platform_dependency"
+      ],
+      "claim": "应先判断领导拥有的是可迁移能力还是原平台资源，并把工资、股份、兑现、稀释、决策权和退出机制落实到纸面。",
+      "conditions": [
+        "创业动机可能源于领导与原公司的冲突",
+        "客户、供应链或信用可能依赖原平台",
+        "用户将放弃高薪并共同承担家庭后果"
+      ],
+      "consequence": "若平台资源无法迁移，所谓合伙可能退化为降薪陪跑；核验过程本身可以帮助双方暴露问题。",
+      "authorityLevel": 4,
+      "rankingScore": 0.89796036,
+      "voteUpCount": 0,
+      "reviewStatus": "approved_with_caution",
+      "reviewNote": "与主场景高度相关，适合生成股权谈判和平台资源假设；属于观点回答，不视为事实预测。"
+    },
+    {
+      "id": "zh-startup-08",
+      "contentId": "1892759403495946103",
+      "title": "能不能从头说一下你们的创业经历？",
+      "url": "https://www.zhihu.com/question/364775486/answer/2077346407472748509",
+      "author": "运气暴富认知还债",
+      "contentType": "Answer",
+      "stance": "support",
+      "categories": [
+        "support_entrepreneurship",
+        "growth_and_autonomy",
+        "cashflow_discipline"
+      ],
+      "claim": "作者早期创业获得了显著收入和自主感，但在把行业红利误判为个人能力后盲目扩张，最终现金储备和业务边界被破坏。",
+      "conditions": [
+        "早期业务位于熟悉领域并能产生真实现金流",
+        "扩张仍需维持现金储备和小成本验证",
+        "新业务没有越出团队能力圈"
+      ],
+      "consequence": "创业可能带来高成长和自主权；若成功引发过度自信，同样的收益会反向放大扩张风险。",
+      "authorityLevel": 2,
+      "rankingScore": 0.86271006,
+      "voteUpCount": 2,
+      "reviewStatus": "approved_with_caution",
+      "reviewNote": "第一人称复盘，适合同时表现创业收益与成功后的风险；不能推导其他人的结果概率。"
+    }
+  ]
+}

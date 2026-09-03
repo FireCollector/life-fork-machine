@@ -1,0 +1,453 @@
+{
+  "schemaVersion": 1,
+  "scenarioId": "startup-leader-invitation",
+  "resultSections": [
+    { "id": "state-radar", "title": "你把什么推高了", "description": "展示六维最终状态与三条世界的相对差异，不解释为成功概率。" },
+    { "id": "tradeoff-ledger", "title": "得到、失去、仍未知", "description": "从事实、承诺与不可逆事件生成选择账本。" },
+    { "id": "assumption-check", "title": "先验证你最相信的事", "description": "展示判断成立、不成立或暂时不确定时，会发生什么。" },
+    { "id": "blind-spots", "title": "你可能没看见的代价", "description": "按选择路径和状态触发盲点卡。" },
+    { "id": "future-letter", "title": "未来的你写来一封信", "description": "AI 或离线模板生成；必须标注为虚构反思，不冒充预测。" },
+    { "id": "seven-day-test", "title": "未来七天，只买信息", "description": "给出三步、低成本、可退出的现实验证实验。" },
+    { "id": "sources", "title": "社区经验从哪里来", "description": "至少展示三张来源卡，并明确知乎回答只代表社区经验样本。" }
+  ],
+  "assumptionBlasts": [
+    {
+      "id": "equity-promise-breaks",
+      "label": "领导真会把股权给你",
+      "premise": "你相信融资到账后，领导会把答应的股权和职位补给你。",
+      "checkQuestion": "先看合同：股权和职位真的写进去了吗？",
+      "evidenceOptions": [
+        { "id": "equity-written", "label": "合同写清了", "detail": "比例、归属期和职位都能在文件里找到。", "result": "supported" },
+        { "id": "equity-verbal-only", "label": "只有口头承诺", "detail": "领导说会补，但现在还没有完整文件。", "result": "inconclusive" },
+        { "id": "equity-missing", "label": "合同里没有", "detail": "股权表或合同里找不到答应你的那一份。", "result": "contradicted" }
+      ],
+      "outcomes": {
+        "supported": { "label": "这次有证据支持", "narrative": "合同把股权、归属期和职位写清了，这个判断目前站得住。", "stateEffect": "keep", "fact": "股权和职位已经写进合同", "irreversibleEvent": "你已经按书面条件继续谈加入" },
+        "contradicted": { "label": "这次发现不对", "narrative": "合同里没有那份股权承诺，口头说法不能当成已经拿到。", "stateEffect": "reversal", "fact": "口头股权没有出现在合同里", "irreversibleEvent": "你已经知道这份承诺不能按原话兑现" },
+        "inconclusive": { "label": "现在还查不清", "narrative": "对方还没拿出完整文件，这件事既不能算答应，也不能算拒绝。", "stateEffect": "uncertain", "fact": "股权条件仍缺少完整书面材料", "irreversibleEvent": "你暂时不能把口头股权算进收入和权益" }
+      },
+      "reversal": "钱到账了，新股权表里却没有那份口头承诺。你的职位和权限也比说好的低。",
+      "sourceIds": ["zh-startup-01", "zh-startup-04", "zh-startup-07"],
+      "deltaByWorld": {
+        "stay": { "cashSafety": 0, "careerOptionality": -3, "growthSlope": 0, "relationshipCapital": -8, "wellbeingLoad": 5, "valueAlignment": -5 },
+        "leap": { "cashSafety": -6, "careerOptionality": -8, "growthSlope": 2, "relationshipCapital": -18, "wellbeingLoad": 14, "valueAlignment": -15 },
+        "bridge": { "cashSafety": 2, "careerOptionality": 4, "growthSlope": 1, "relationshipCapital": -6, "wellbeingLoad": 4, "valueAlignment": 3 }
+      },
+      "addedFactsByWorld": {
+        "stay": ["你没损失股权，但和领导的关系变了"],
+        "leap": ["口头说的股份没写进合同，你很难追讨"],
+        "bridge": ["辞职前看股权表，就发现了差异"]
+      },
+      "irreversibleEventsByWorld": {
+        "stay": ["最早期席位已经由他人获得"],
+        "leap": ["你已在缺少权益保障的情况下投入核心劳动"],
+        "bridge": ["与领导的信任关系出现裂缝"]
+      },
+      "fallbackNarrativeByWorld": {
+        "stay": "听到消息时，你庆幸自己没拿工作去赌口头承诺。只是你和领导的关系，很难再像以前那样了。",
+        "leap": "融资到账后，新股权表里没有答应给你的那一份。你确实干了一年、学了很多，可做过贡献不等于手里有权利。现在想留或想走，都比入职前被动。",
+        "bridge": "你在辞职前就发现股权表和口头说法不一样。领导不太高兴，但你还没辞职，损失只限于这四周。"
+      },
+      "realityTest": ["要一份完整的股权条款和归属表", "找不站任何一方的专业人士看稀释、回购和退出条款", "没签字前，口头股权一律按零算"]
+    },
+    {
+      "id": "family-cannot-absorb-volatility",
+      "label": "家里真能扛一年少收入",
+      "premise": "你觉得家里能扛住一年少收入、经常加班的日子。",
+      "checkQuestion": "把家里未来一年的账算一遍，真的扛得住吗？",
+      "evidenceOptions": [
+        { "id": "family-budget-safe", "label": "账上确实扛得住", "detail": "最低开支、照护安排和收入缺口都算过了。", "result": "supported" },
+        { "id": "family-budget-unclear", "label": "有些账还没算清", "detail": "知道会少收入，但还没算出能撑多久。", "result": "inconclusive" },
+        { "id": "family-budget-breaks", "label": "一算就不够", "detail": "只要收入下降或加班持续，家里的预算就会断。", "result": "contradicted" }
+      ],
+      "outcomes": {
+        "supported": { "label": "这次有证据支持", "narrative": "最低开支和时间安排都算过了，家里目前有能力扛住这段波动。", "stateEffect": "keep", "fact": "家庭最低开支和时间边界已经算清", "irreversibleEvent": "你和家人已经按这份预算安排下一阶段" },
+        "contradicted": { "label": "这次发现不对", "narrative": "账算下来撑不住，创业的成本会直接落到家里的生活安排上。", "stateEffect": "reversal", "fact": "家庭预算无法覆盖收入下降和额外开支", "irreversibleEvent": "你必须暂停、补收入或重新谈家庭分工" },
+        "inconclusive": { "label": "现在还查不清", "narrative": "收入、支出和照护安排还没算全，现在不能说家里一定能扛住。", "stateEffect": "uncertain", "fact": "家庭能承受的收入和时间上限还没算清", "irreversibleEvent": "你暂时不能把家庭承受力当成确定条件" }
+      },
+      "reversal": "第三个月，家里突然多了一笔躲不开的开支。伴侣明确说，这样的收入和作息不能再继续。",
+      "sourceIds": ["zh-startup-01", "zh-startup-04", "zh-startup-06"],
+      "deltaByWorld": {
+        "stay": { "cashSafety": 3, "careerOptionality": -2, "growthSlope": -2, "relationshipCapital": 4, "wellbeingLoad": 4, "valueAlignment": -2 },
+        "leap": { "cashSafety": -12, "careerOptionality": -5, "growthSlope": -3, "relationshipCapital": -20, "wellbeingLoad": 18, "valueAlignment": -8 },
+        "bridge": { "cashSafety": -3, "careerOptionality": 1, "growthSlope": -2, "relationshipCapital": -15, "wellbeingLoad": 18, "valueAlignment": -5 }
+      },
+      "addedFactsByWorld": {
+        "stay": ["工资很稳，但冲晋升也让你经常不在家"],
+        "leap": ["家里没法继续替创业填钱、填时间"],
+        "bridge": ["白天上班、晚上试项目，比预想中更占家庭时间"]
+      },
+      "irreversibleEventsByWorld": {
+        "stay": ["你需要放弃部分高负荷机会以恢复家庭边界"],
+        "leap": ["必须提前退出、补充收入或重谈家庭责任"],
+        "bridge": ["验证期必须缩短，不能靠无限加班维持"]
+      },
+      "fallbackNarrativeByWorld": {
+        "stay": "工资挡住了这笔开支，但你为晋升连续加班，家里照样看不到人。问题不只是赚多少钱，还有谁在替你照顾家里。",
+        "leap": "这笔开支让存款一下少撑几个月。伴侣不再聊公司以后能做多大，只问下个月谁付钱、谁照顾家里。创业已经不是你一个人的决定。",
+        "bridge": "工资保住了，但你把试项目都塞进晚上，家里长期见不到人。四周计划必须缩短，还得重新分配家务和照护。"
+      },
+      "realityTest": ["一起算清未来十二个月每月最少要花多少钱", "定好每周最多投入几小时，哪些时间不能占", "提前写下出现什么情况就暂停或退出"]
+    },
+    {
+      "id": "equivalent-job-not-available",
+      "label": "创业失败还能找到同档工作",
+      "premise": "你觉得创业没做成，也能很快回到原来的工资和级别。",
+      "checkQuestion": "现在就去聊三份目标岗位，真的能按原工资回来吗？",
+      "evidenceOptions": [
+        { "id": "return-offer-matches", "label": "拿到同档反馈", "detail": "真实岗位愿意按接近原来的级别和工资聊。", "result": "supported" },
+        { "id": "return-feedback-unclear", "label": "只有模糊反馈", "detail": "有人愿意聊，但级别和薪资还没有定论。", "result": "inconclusive" },
+        { "id": "return-offer-drops", "label": "只能降薪降级", "detail": "真实岗位给出的级别、工资或求职周期明显更差。", "result": "contradicted" }
+      ],
+      "outcomes": {
+        "supported": { "label": "这次有证据支持", "narrative": "真实岗位反馈和你的预期接近，回到职场这条路目前还算可行。", "stateEffect": "keep", "fact": "目标岗位给出了接近原来的级别和工资", "irreversibleEvent": "你已经拿到一条可验证的退路" },
+        "contradicted": { "label": "这次发现不对", "narrative": "真实反馈显示，回到原来的工资和级别没那么快，也没那么容易。", "stateEffect": "reversal", "fact": "目标岗位的级别、工资或求职周期低于预期", "irreversibleEvent": "你不能再把随时回去当成无损退路" },
+        "inconclusive": { "label": "现在还查不清", "narrative": "聊过的岗位还不足以判断退路，至少还需要更多真实反馈。", "stateEffect": "uncertain", "fact": "回职场的级别和工资仍缺少足够市场反馈", "irreversibleEvent": "你暂时不能把回职场当成确定安全垫" }
+      },
+      "reversal": "面试结果没那么乐观。想回职场，可能要降薪、降级，或者找上几个月。",
+      "sourceIds": ["zh-startup-03", "zh-startup-06", "zh-startup-07"],
+      "deltaByWorld": {
+        "stay": { "cashSafety": 1, "careerOptionality": -10, "growthSlope": 3, "relationshipCapital": 0, "wellbeingLoad": 7, "valueAlignment": 1 },
+        "leap": { "cashSafety": -8, "careerOptionality": -20, "growthSlope": 4, "relationshipCapital": -2, "wellbeingLoad": 14, "valueAlignment": -4 },
+        "bridge": { "cashSafety": 2, "careerOptionality": -6, "growthSlope": 4, "relationshipCapital": 0, "wellbeingLoad": 5, "valueAlignment": 2 }
+      },
+      "addedFactsByWorld": {
+        "stay": ["面试后发现，有些能力离开现在的平台就不值钱了"],
+        "leap": ["创业经历有人认可，但原来的工资和级别回不来"],
+        "bridge": ["辞职前去面试，提前看到了自己和市场报价的差距"]
+      },
+      "irreversibleEventsByWorld": {
+        "stay": ["需要用真实项目补齐可迁移能力"],
+        "leap": ["退出后可能接受较低级别或更长求职期"],
+        "bridge": ["加入条件必须包含更长个人现金跑道"]
+      },
+      "fallbackNarrativeByWorld": {
+        "stay": "你没辞职，但几次面试让你发现，有些本事只在现在这家公司里值钱。留下也不能只顾眼前，得给自己准备出口。",
+        "leap": "招聘方认可你从零做公司的经历，却不愿给回原来的工资和级别。“大不了回去”没有想象中容易，你得准备更长的求职期。",
+        "bridge": "一次面试就告诉你，回职场不是无损退出。好在你还没辞职，可以先多存钱、补技能，或者重谈加入条件。"
+      },
+      "realityTest": ["找三个目标岗位聊一次或正式面试", "直接问招聘方：你值什么级别、多少工资、缺什么技能", "按可能找六个月工作，重新算存款够不够"]
+    }
+  ],
+  "blindSpots": [
+    {
+      "id": "gratitude-debt",
+      "title": "感恩债不是股权条款",
+      "triggerActionIds": ["stay-1-delay-answer", "leap-1-verbal-trust", "leap-2-all-in-delay-pay"],
+      "text": "过去被提携的情感会放大服从，却不能替代角色、权益和退出边界。把感谢与职业交易分开写一遍。",
+      "sourceIds": ["zh-startup-01", "zh-startup-07"]
+    },
+    {
+      "id": "platform-illusion",
+      "title": "你拥有资源，还是平台借给你资源",
+      "triggerActionIds": ["stay-3-three-year-track", "leap-3-shutdown-return", "bridge-3-internal-transfer"],
+      "text": "客户、品牌、数据和决策权未必能随你离开。应区分个人可迁移能力与原平台授权。",
+      "sourceIds": ["zh-startup-07"]
+    },
+    {
+      "id": "verbal-equity",
+      "title": "口头上行没有可执行性",
+      "triggerActionIds": ["leap-1-verbal-trust", "leap-2-all-in-delay-pay"],
+      "text": "未写清份额、归属、稀释、回购和退出的期权，不应按完整收益计入选择。",
+      "sourceIds": ["zh-startup-04", "zh-startup-07"]
+    },
+    {
+      "id": "family-invisible-cost",
+      "title": "家庭成本不只出现在工资表",
+      "triggerActionIds": ["leap-2-all-in-delay-pay", "bridge-1-customer-interviews", "bridge-2-narrow-extend", "bridge-3-quarterly-venture"],
+      "text": "时间缺席、照护转移和情绪劳动也是创业或双线试验的成本，应由共同生活者参与定义红线。",
+      "sourceIds": ["zh-startup-01", "zh-startup-06"]
+    },
+    {
+      "id": "survivorship-bias",
+      "title": "一个成功故事不能给你概率",
+      "triggerActionIds": ["leap-3-double-down", "bridge-3-validated-join", "bridge-3-quarterly-venture"],
+      "text": "正面样本能提示必要条件，不能证明你会复制结果。继续要求自己的客户、现金和团队证据。",
+      "sourceIds": ["zh-startup-05", "zh-startup-08"]
+    },
+    {
+      "id": "runway-denial",
+      "title": "融资消息不等于现金跑道",
+      "triggerActionIds": ["leap-1-verbal-trust", "leap-2-all-in-delay-pay", "leap-3-double-down"],
+      "text": "应用账户余额、应付款、回款周期和个人最低开支计算跑道，而不是依赖‘快到账’。",
+      "sourceIds": ["zh-startup-01", "zh-startup-04", "zh-startup-08"]
+    },
+    {
+      "id": "return-option-illusion",
+      "title": "退路必须经过市场测试",
+      "triggerActionIds": ["stay-2-market-interviews", "leap-2-build-exit", "leap-3-shutdown-return"],
+      "text": "‘大不了再找工作’只有在真实岗位、薪酬反馈和现金跑道存在时才是一条退路。",
+      "sourceIds": ["zh-startup-06", "zh-startup-07"]
+    },
+    {
+      "id": "dual-track-load",
+      "title": "搭桥不是免费选项",
+      "triggerActionIds": ["stay-3-side-incubation", "bridge-1-evidence-sprint", "bridge-1-customer-interviews", "bridge-2-narrow-extend", "bridge-3-quarterly-venture"],
+      "text": "双线方案用时间、健康和关系购买信息，必须有明确时限、单一问题和退出条件。",
+      "sourceIds": ["zh-startup-02", "zh-startup-03"]
+    },
+    {
+      "id": "success-overconfidence",
+      "title": "第一笔付款也可能制造盲区",
+      "triggerActionIds": ["leap-3-double-down", "bridge-2-conditional-join", "bridge-3-validated-join"],
+      "text": "早期成绩会诱发扩张和过度自信。区分一次订单、可重复需求与可持续现金流。",
+      "sourceIds": ["zh-startup-05", "zh-startup-08"]
+    }
+  ],
+  "futureLetters": [
+    {
+      "id": "stay-letter-earned-stability",
+      "worldId": "stay",
+      "tone": "笃定但不自满",
+      "condition": "cashSafety >= 75 && growthSlope >= 55",
+      "template": "一年前的我：谢谢你没有把稳定当成逃避，也没有把高薪当成答案。你要求了承诺、留下了复盘点。请继续问：今天拥有的能力，有多少能跟着我们离开平台？",
+      "sourceIds": ["zh-startup-03", "zh-startup-07"]
+    },
+    {
+      "id": "stay-letter-golden-cage",
+      "worldId": "stay",
+      "tone": "温和提醒",
+      "condition": "cashSafety >= 80 && careerOptionality < 60",
+      "template": "一年前的我：我们没有输，只是被更好的条件留得更深。下一步不必冲动离开，但请用一次市场面试、一个独立作品和一笔自己的收入，证明门仍能从里面打开。",
+      "sourceIds": ["zh-startup-03", "zh-startup-07"]
+    },
+    {
+      "id": "stay-letter-regret-to-experiment",
+      "worldId": "stay",
+      "tone": "承认遗憾",
+      "condition": "valueAlignment < 55 || growthSlope < 50",
+      "template": "一年前的我：遗憾并不证明当时选错，它只说明有个需要没有被处理。别再用想象惩罚自己；给它七天和一个可退出的小实验，让现实回答。",
+      "sourceIds": ["zh-startup-02", "zh-startup-03"]
+    },
+    {
+      "id": "leap-letter-growth-with-boundaries",
+      "worldId": "leap",
+      "tone": "锐利而诚实",
+      "condition": "growthSlope >= 75 && wellbeingLoad < 85",
+      "template": "一年前的我：你跳进来的勇气有价值，但真正救我们的不是勇气，是后来学会看合同、现金表和止损线。继续冒险可以，别再把没有边界叫作信任。",
+      "sourceIds": ["zh-startup-01", "zh-startup-07", "zh-startup-08"]
+    },
+    {
+      "id": "leap-letter-sunk-cost",
+      "worldId": "leap",
+      "tone": "允许停止",
+      "condition": "cashSafety < 35 || wellbeingLoad >= 85",
+      "template": "一年前的我：已经付出的代价不会因为再付一年就自动变成值得。请用今天的客户、现金与生活边界决定明天，不要让昨天替我们投票。停止也可以是一种负责。",
+      "sourceIds": ["zh-startup-04", "zh-startup-06"]
+    },
+    {
+      "id": "leap-letter-portable-growth",
+      "worldId": "leap",
+      "tone": "重新命名失败",
+      "condition": "careerOptionality >= 60 && growthSlope >= 65",
+      "template": "一年前的我：公司是否成功不是这段经历唯一的结论。把客户判断、现金纪律和零到一交付写成能被市场验证的证据。我们带得走的，才是这次选择真正属于我们的部分。",
+      "sourceIds": ["zh-startup-06", "zh-startup-08"]
+    },
+    {
+      "id": "bridge-letter-information-bought",
+      "worldId": "bridge",
+      "tone": "清醒",
+      "condition": "careerOptionality >= 75 && wellbeingLoad < 80",
+      "template": "一年前的我：桥没有替我们消除风险，它只让我们用较小代价买到了较好信息。记住它的纪律：一个问题、一个期限、一条退出线。否则试水也会变成拖延。",
+      "sourceIds": ["zh-startup-01", "zh-startup-02"]
+    },
+    {
+      "id": "bridge-letter-endless-halfway",
+      "worldId": "bridge",
+      "tone": "催促收束",
+      "condition": "wellbeingLoad >= 80",
+      "template": "一年前的我：我们保留了太多选项，也让每个夜晚替犹豫付费。证据已经足够时，请做一次承诺；桥是用来通过的，不是用来永久居住的。",
+      "sourceIds": ["zh-startup-02", "zh-startup-03"]
+    },
+    {
+      "id": "bridge-letter-own-system",
+      "worldId": "bridge",
+      "tone": "建设性",
+      "condition": "growthSlope >= 65 && valueAlignment >= 65",
+      "template": "一年前的我：最有价值的不是我们最终去了哪边，而是学会把巨大决定拆成可验证的小问题。把这套方法留住，它会比任何一次正确选择更耐用。",
+      "sourceIds": ["zh-startup-02", "zh-startup-03", "zh-startup-05"]
+    }
+  ],
+  "sevenDayExperiments": [
+    {
+      "id": "test-due-diligence-packet",
+      "title": "创业邀请尽调包",
+      "triggerActionIds": ["leap-1-signed-terms", "leap-1-verbal-trust", "bridge-1-cap-table-first"],
+      "worldIds": ["leap", "bridge"],
+      "assumptionResults": ["contradicted", "inconclusive"],
+      "statePressureKeys": ["cashSafety", "valueAlignment"],
+      "priority": 8,
+      "question": "这家创业公司真的有客户、有现金，也愿意把条件写清吗？",
+      "whyNow": "你还没辞职，查错了也来得及退出。",
+      "steps": ["列出现金跑道、付费客户、股权、角色、决策权和退出六项未知", "向邀请人索取可验证材料并记录缺失项", "请一位无利益关系的人挑战你的结论"],
+      "evidence": "拿到付款记录、现金余额、股权和权限的书面材料。",
+      "resultMeaning": { "supported": "材料齐全，可以继续谈具体条件。", "contradicted": "关键材料拿不出来，先别把口头承诺算进去。", "inconclusive": "对方一直拖，暂时不辞职，继续补证据。" },
+      "nextStep": { "supported": "把已确认的条件写进协议，再决定是否加入。", "contradicted": "按退出规则保留现职，先不为口头承诺下注。", "inconclusive": "给对方一个明确补材料期限，期限到了再判断。" },
+      "timeBudget": "3小时",
+      "moneyBudget": "0–300元",
+      "exitRule": "七天后仍无法获得三项核心材料，就不把对应承诺计入收益。",
+      "sourceIds": ["zh-startup-01", "zh-startup-07"]
+    },
+    {
+      "id": "test-family-stress",
+      "title": "七天家庭承受力核验",
+      "triggerActionIds": ["leap-2-all-in-delay-pay", "bridge-1-evidence-sprint", "bridge-3-quarterly-venture"],
+      "worldIds": ["bridge", "leap"],
+      "assumptionResults": ["contradicted", "inconclusive"],
+      "statePressureKeys": ["wellbeingLoad", "cashSafety"],
+      "priority": 24,
+      "question": "家里能不能扛住一年少收入和更多加班？",
+      "whyNow": "先把账和时间算清，别等压力爆了才谈。",
+      "steps": ["共同列出最低月支出、照护责任和不可削减项目", "分别写下能承受的收入波动和时间上限", "合并为三条暂停或退出红线"],
+      "simulationDays": [
+        { "day": 1, "title": "先把底线写下来", "situation": "你和家人把房租、吃饭、照护和固定还款一项项列出来，发现最低开支比平时估的高。", "action": "共同确认一年内不能被砍掉的支出。", "evidence": "有一张双方都认可的最低月支出表。" },
+        { "day": 2, "title": "算收入缺口", "situation": "按创业前六个月收入打六折重算，账上会出现一段需要补上的缺口。", "action": "把缺口金额和最长可承受月份写清楚。", "evidence": "缺口、来源和截止日期都有具体数字。" },
+        { "day": 3, "title": "做一次时间实测", "situation": "你连续记录工作、通勤、家务和试项目的时间，发现晚上的空档没有想象中多。", "action": "让共同生活者标出被你转移过去的家务和照护。", "evidence": "七天记录能对上实际作息，并得到家人确认。" },
+        { "day": 4, "title": "意外先发生", "situation": "家里临时出现一笔维修支出，同时领导又要求你加班，原来的时间表被打乱。", "action": "按这次意外重新跑一遍现金和时间预算。", "evidence": "预算能覆盖意外，或明确写出无法覆盖的缺口。" },
+        { "day": 5, "title": "把红线说出口", "situation": "家人不反对你试，但明确表示不能用借款补日常开支，也不能长期占用周末。", "action": "把暂停、补收入和退出条件写成三条红线。", "evidence": "双方在红线上签字或留下明确的文字确认。" },
+        { "day": 6, "title": "请第三个人挑刺", "situation": "一位不参与项目的人提醒你：你把领导的承诺算进了收入，却还没拿到书面条件。", "action": "让对方逐项挑战你的预算假设和时间安排。", "evidence": "至少记录三条被质疑的假设，以及你如何修正。" },
+        { "day": 7, "title": "做一次家庭复盘", "situation": "七天记录显示：只要收入下降、加班增加，家庭就会在两个月内触碰红线。", "action": "对照证据，选择继续试、缩小范围或暂停。", "evidence": "你能用数字和记录解释选择，而不是只说‘家里支持’。" }
+      ],
+      "evidence": "算出最低月支出、收入缺口和每周最多能投入多少时间。",
+      "resultMeaning": { "supported": "预算和边界都扛得住，可以继续试。", "contradicted": "一降收入就会影响生活，先暂停或补收入。", "inconclusive": "账还没算全，不要把家庭支持当成确定条件。" },
+      "nextStep": { "supported": "按家庭同意的投入上限继续试，不临时加码。", "contradicted": "先补现金储备或缩小试水范围，不急着离职。", "inconclusive": "和家人把缺的账补齐，再约一次复盘。" },
+      "timeBudget": "90分钟",
+      "moneyBudget": "0元",
+      "exitRule": "双方无法同意红线时，不执行不可逆离职。",
+      "sourceIds": ["zh-startup-01", "zh-startup-06"]
+    },
+    {
+      "id": "test-paid-proof",
+      "title": "一笔真实付款测试",
+      "triggerActionIds": ["bridge-1-customer-interviews", "bridge-2-narrow-extend", "leap-3-double-down"],
+      "worldIds": ["bridge", "leap"],
+      "statePressureKeys": ["growthSlope"],
+      "priority": 12,
+      "question": "客户是真的愿意付钱，还是只说觉得不错？",
+      "whyNow": "一笔付款不等于需求成立，重复付款才更有说服力。",
+      "steps": ["定义一个最小可交付结果和明确价格", "联系五位目标客户并提出真实付款", "记录拒绝理由、付款条件和交付成本"],
+      "evidence": "看真实付款、采购承诺和交付成本，不看点赞或口头兴趣。",
+      "resultMeaning": { "supported": "有人愿意付钱，可以继续验证复购。", "contradicted": "客户不愿付款，先改问题或停止投入。", "inconclusive": "只有兴趣没有付款，暂时不能算需求成立。" },
+      "nextStep": { "supported": "把一次付款做成复购测试，确认需求能持续。", "contradicted": "停止继续堆功能，先改问题或撤掉这条线。", "inconclusive": "再找一批目标客户，仍只听到兴趣就先停。" },
+      "timeBudget": "5小时",
+      "moneyBudget": "不超过300元",
+      "exitRule": "不以点赞、转发、口头兴趣替代付款或采购承诺。",
+      "sourceIds": ["zh-startup-02", "zh-startup-05"]
+    },
+    {
+      "id": "test-cap-table-review",
+      "title": "股权与退出条款体检",
+      "triggerActionIds": ["leap-1-signed-terms", "leap-1-cliff-exit", "bridge-2-conditional-join"],
+      "worldIds": ["leap", "bridge"],
+      "assumptionResults": ["contradicted", "inconclusive"],
+      "statePressureKeys": ["valueAlignment"],
+      "priority": 16,
+      "question": "这份股权和退出条件，真的能保护你吗？",
+      "whyNow": "辞职之前看清楚，发现问题还有退路。",
+      "steps": ["把份额、归属期、悬崖期、稀释、回购和离职处理写成一页", "对照协议逐项标记已写、模糊、缺失", "让专业人士或可信创业者复核最坏情形"],
+      "evidence": "每个关键条款都能在协议里找到，并有人帮你看过最坏情况。",
+      "resultMeaning": { "supported": "权益和退出条件写清了，可以继续谈岗位。", "contradicted": "关键权益没写清，先不提交辞职。", "inconclusive": "协议仍模糊，暂时不能把股权算作收益。" },
+      "nextStep": { "supported": "让律师或懂行的人复核一次，再进入离职流程。", "contradicted": "保留现职，把缺失条款列成谈判清单。", "inconclusive": "约定补充协议的具体日期，不接受无限期口头承诺。" },
+      "timeBudget": "2–4小时",
+      "moneyBudget": "0–500元",
+      "exitRule": "核心权益未书面确认前，不提交辞职。",
+      "sourceIds": ["zh-startup-04", "zh-startup-07"]
+    },
+    {
+      "id": "test-market-return",
+      "title": "退路市场实测",
+      "triggerActionIds": ["stay-2-market-interviews", "leap-2-build-exit", "leap-3-shutdown-return"],
+      "worldIds": ["stay", "leap"],
+      "statePressureKeys": ["careerOptionality"],
+      "priority": 20,
+      "question": "创业没做成，你真的能按原来的级别回来吗？",
+      "whyNow": "先问市场要什么，别只靠“以后再找工作”的想象。",
+      "steps": ["选三个你认为可以返回的真实岗位", "约三位招聘方或同行做信息面", "记录薪资、级别、技能缺口和预计求职周期"],
+      "evidence": "拿到真实岗位的薪资、级别、技能缺口和求职周期反馈。",
+      "resultMeaning": { "supported": "退路有真实反馈，可以把它算进计划。", "contradicted": "退路比想象窄，先多存钱或补技能。", "inconclusive": "反馈太少，暂时不能把随时回去当安全垫。" },
+      "nextStep": { "supported": "把岗位反馈写入退路计划，设好回撤触发点。", "contradicted": "先补技能和现金跑道，再考虑不可逆的离开。", "inconclusive": "再做几次信息面，拿到可比的真实反馈。" },
+      "timeBudget": "4小时",
+      "moneyBudget": "0元",
+      "exitRule": "没有真实反馈前，不把‘随时能回去’当作安全垫。",
+      "sourceIds": ["zh-startup-03", "zh-startup-06", "zh-startup-07"]
+    },
+    {
+      "id": "test-four-week-bridge",
+      "title": "四周搭桥契约",
+      "triggerActionIds": ["stay-3-side-incubation", "bridge-1-evidence-sprint", "bridge-2-narrow-extend"],
+      "worldIds": ["stay", "bridge"],
+      "statePressureKeys": ["wellbeingLoad"],
+      "priority": 10,
+      "question": "四周内能不能用少量时间查清最关键的一件事？",
+      "whyNow": "先给试水设期限，避免白天上班、晚上加班变成无限期。",
+      "steps": ["只选一个最关键未知，例如是否有人付费", "写下四周内的证据标准、投入上限和负责人", "现在就在日历写入结束复盘和二选一日期"],
+      "evidence": "到期时拿到事先写好的证据，并且投入没有超过上限。",
+      "resultMeaning": { "supported": "关键问题有答案，可以做一次明确选择。", "contradicted": "四周仍没有证据，不再继续无限试。", "inconclusive": "证据不够，重新定义问题或先停下来。" },
+      "nextStep": { "supported": "按约定日期做一次二选一，不把试水拖成常态。", "contradicted": "执行停止或退出动作，把时间还给主线。", "inconclusive": "只允许重新定义一次问题，然后重新设截止日。" },
+      "timeBudget": "60分钟制定，每周不超过6小时",
+      "moneyBudget": "不超过500元",
+      "exitRule": "到期不自动续期；证据不足即停止或重新定义一次。",
+      "sourceIds": ["zh-startup-02", "zh-startup-03"]
+    },
+    {
+      "id": "test-role-contract",
+      "title": "关系与角色分离会谈",
+      "triggerActionIds": ["stay-1-preserve-relationship", "leap-2-budget-stopline", "leap-3-renegotiate-stepback"],
+      "worldIds": ["stay", "leap"],
+      "statePressureKeys": ["relationshipCapital"],
+      "priority": 6,
+      "question": "你们是在谈合伙，还是只靠关系互相帮忙？",
+      "whyNow": "把朋友、领导和合伙人的身份分开，后面才不会越帮越乱。",
+      "steps": ["分别写下朋友、前下属、合伙人三个身份的期待", "与邀请人只讨论岗位权责、冲突处理和退出", "会后用书面纪要确认双方理解"],
+      "evidence": "对方愿意把权责、冲突处理和退出方式写进纪要。",
+      "resultMeaning": { "supported": "角色和边界谈清了，关系可以继续合作。", "contradicted": "对方回避边界和退出，关系不能替代合同。", "inconclusive": "双方说法还不一致，先不要增加投入。" },
+      "nextStep": { "supported": "把会谈纪要变成可执行的分工和冲突流程。", "contradicted": "降低投入，把关系和工作安排分开处理。", "inconclusive": "各自写下理解再对照，没对齐前不扩大合作。" },
+      "timeBudget": "2小时",
+      "moneyBudget": "0元",
+      "exitRule": "对方拒绝讨论冲突和退出时，降低关系资本在决策中的权重。",
+      "sourceIds": ["zh-startup-01", "zh-startup-07"]
+    },
+    {
+      "id": "test-runway-budget",
+      "title": "最坏情形现金跑道",
+      "triggerActionIds": ["stay-2-optimize-stability", "leap-2-all-in-delay-pay", "leap-3-double-down"],
+      "worldIds": ["stay", "leap", "bridge"],
+      "statePressureKeys": ["cashSafety"],
+      "priority": 4,
+      "question": "如果融资和回款都晚三个月，你和公司还能撑多久？",
+      "whyNow": "按最坏情况算一遍，才能知道什么时候必须停。",
+      "steps": ["按零融资、回款延迟三个月重算公司跑道", "按六个月无收入重算个人跑道", "写下余额触发的降薪拒绝、暂停或退出动作"],
+      "evidence": "算出公司和个人的现金红线，并写下触发后的具体动作。",
+      "resultMeaning": { "supported": "现金能撑过红线，可以按计划继续。", "contradicted": "一旦延期就会断现金，先降投入或退出。", "inconclusive": "账目不完整，不能把“快到账”当现金。" },
+      "nextStep": { "supported": "按红线继续监测，每周复盘一次现金变化。", "contradicted": "立刻执行降投入或退出，不等最后一笔钱。", "inconclusive": "先把账补齐并确认回款日期，再重新计算跑道。" },
+      "timeBudget": "90分钟",
+      "moneyBudget": "0元",
+      "exitRule": "任何一条跑道低于预设红线且无书面补救，就不继续加码。",
+      "sourceIds": ["zh-startup-01", "zh-startup-04", "zh-startup-08"]
+    },
+    {
+      "id": "test-time-audit",
+      "title": "双线负荷七日实测",
+      "triggerActionIds": ["stay-3-side-incubation", "bridge-1-customer-interviews", "bridge-3-quarterly-venture"],
+      "worldIds": ["stay", "bridge"],
+      "statePressureKeys": ["wellbeingLoad"],
+      "priority": 7,
+      "question": "你真的有时间同时上班、试项目和照顾生活吗？",
+      "whyNow": "先用七天记录真实负荷，别只按理想时间表做决定。",
+      "steps": ["连续七天记录工作、通勤、家务、照护、睡眠和试验时间", "让共同生活者标记被转移给他们的隐性劳动", "据此设置每周投入上限和不可占用时段"],
+      "evidence": "七天记录能对上实际生活，并得到共同生活者确认。",
+      "resultMeaning": { "supported": "时间确实够用，可以按上限继续试。", "contradicted": "双线负荷已经超标，先减项目或暂停。", "inconclusive": "记录不完整，暂时不能说自己扛得住。" },
+      "nextStep": { "supported": "把每周投入上限写进日历，超时就停。", "contradicted": "先砍掉一条线，优先保住睡眠和家庭时间。", "inconclusive": "补完七天记录，再和共同生活者一起复盘。" },
+      "timeBudget": "每天5分钟记录",
+      "moneyBudget": "0元",
+      "exitRule": "连续两周突破睡眠或家庭红线，自动暂停副线。",
+      "sourceIds": ["zh-startup-02", "zh-startup-03"]
+    }
+  ],
+  "offlineFallback": {
+    "selectionRule": "按已选世界、触发动作和最终状态依次选择盲点、未来信与实验；没有命中条件时使用同世界第一封信和通用尽调实验。",
+    "futureLetterLabel": "虚构反思文本，不是对现实未来的预测",
+    "sourceDisclaimer": "以下知乎回答仅作为社区经验样本，不构成事实证明、成功概率或职业建议。",
+    "minimumSources": 3
+  }
+}

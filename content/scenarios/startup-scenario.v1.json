@@ -1,0 +1,548 @@
+{
+  "schemaVersion": 1,
+  "scenarioId": "startup-leader-invitation",
+  "title": "高薪留守，还是跟领导创业？",
+  "subtitle": "同一件事，先看看三种选法各会遇到什么。",
+  "disclaimer": "这些分数只用来对比得失，不是成功率，也不是职业建议。知乎内容只是别人的经历。",
+  "commonBaseline": {
+    "cashSafety": 75,
+    "careerOptionality": 65,
+    "growthSlope": 50,
+    "relationshipCapital": 70,
+    "wellbeingLoad": 45,
+    "valueAlignment": 55
+  },
+  "stateModel": {
+    "range": [0, 100],
+    "dimensions": {
+      "cashSafety": { "label": "手头资金", "higherIsBetter": true },
+      "careerOptionality": { "label": "找工作余地", "higherIsBetter": true },
+      "growthSlope": { "label": "成长速度", "higherIsBetter": true },
+      "relationshipCapital": { "label": "关系状况", "higherIsBetter": true },
+      "wellbeingLoad": { "label": "身心压力", "higherIsBetter": false },
+      "valueAlignment": { "label": "符合内心", "higherIsBetter": true }
+    }
+  },
+  "calibrationRules": [
+    "任何选择都必须同时包含可见收益和真实代价",
+    "口头股权、职位承诺和退出机制默认不视为已落实事实",
+    "成功案例只能证明路径可能存在，不能外推为个人成功概率",
+    "越不可逆的动作，越应要求更强的书面证据和止损条件",
+    "搭桥试水不是零成本方案，其主要代价是双线负荷和关系摩擦"
+  ],
+  "worlds": [
+    {
+      "id": "stay",
+      "name": "留守轨道",
+      "tagline": "先留下，但别什么都不做。",
+      "initialState": { "cashSafety": 83, "careerOptionality": 69, "growthSlope": 47, "relationshipCapital": 74, "wellbeingLoad": 41, "valueAlignment": 53 },
+      "startingPoint": "你决定先不走。今晚得回复领导，而现公司的晋升机会三个月后也会关闭。",
+      "acts": [
+        {
+          "id": "stay-act-1",
+          "act": 1,
+          "timeLabel": "承诺之夜",
+          "sceneTitle": "决定留下，也得谈清楚",
+          "setup": "你不去创业了。但怎么回复领导、留下后争取什么，还得今晚想清楚。",
+          "fallbackNarrative": "晚上十一点，领导还在等回复。你不打算去创业，但也不想继续混日子。接下来要说清楚为什么留下，以及公司能给你什么。",
+          "sourceIds": ["zh-startup-01", "zh-startup-03", "zh-startup-07"],
+          "actions": [
+            {
+              "id": "stay-1-written-promotion",
+              "label": "让公司把晋升条件写清楚",
+              "description": "先谈好未来九十天做什么、给什么资源、什么时候评审，再拒绝创业邀请。",
+              "delta": { "cashSafety": 0, "careerOptionality": 5, "growthSlope": 8, "relationshipCapital": -4, "wellbeingLoad": 6, "valueAlignment": 5 },
+              "benefits": ["留下后有明确目标", "九十天后能看出公司说话算不算数"],
+              "costs": ["公司会知道你动过离职念头", "接下来九十天必须拿结果"],
+              "addFacts": ["公司愿不愿把晋升目标写下来"],
+              "addCommitments": ["九十天内做完关键项目，参加晋升评审"],
+              "irreversibleEvents": ["公司已经知道你考虑过离职"],
+              "sourceIds": ["zh-startup-03", "zh-startup-07"],
+              "fallbackOutcome": "公司给了你一份晋升计划，条件不算完美，但时间和目标都写清了。你也不能再安稳划水。九十天后，公司有没有兑现，一眼就能看出来。"
+            },
+            {
+              "id": "stay-1-preserve-relationship",
+              "label": "直接拒绝，但别把关系闹僵",
+              "description": "告诉领导你担心收入，不会加入；最多再帮他看两次方案。",
+              "delta": { "cashSafety": 2, "careerOptionality": 1, "growthSlope": -5, "relationshipCapital": 8, "wellbeingLoad": -3, "valueAlignment": -4 },
+              "benefits": ["工资和关系都暂时保住", "以后还有合作的可能"],
+              "costs": ["早期核心位置没了", "以后可能总想自己是不是错过了"],
+              "addFacts": ["领导能不能接受你只帮两次"],
+              "addCommitments": ["只帮忙看两次方案，不负责长期执行"],
+              "irreversibleEvents": ["创始团队的位置不再等你"],
+              "sourceIds": ["zh-startup-01", "zh-startup-07"],
+              "fallbackOutcome": "领导沉默了几秒，还是接受了。你们没翻脸，但创业群很快把你移了出去。拒绝说清楚了，那个最早的位置也没了。"
+            },
+            {
+              "id": "stay-1-delay-answer",
+              "label": "再拖两周，先不表态",
+              "description": "拿家庭和工作交接当理由，晚两周再给答复。",
+              "delta": { "cashSafety": 0, "careerOptionality": 6, "growthSlope": 0, "relationshipCapital": -5, "wellbeingLoad": 8, "valueAlignment": -6 },
+              "benefits": ["两边暂时都没关门", "可能多等到一点消息"],
+              "costs": ["领导会觉得你靠不住", "这两周一直惦记，什么都做不踏实"],
+              "addFacts": ["团队愿不愿再等你两周"],
+              "addCommitments": ["两周后必须给出最终答复"],
+              "irreversibleEvents": ["领导已经开始找别人"],
+              "sourceIds": ["zh-startup-01", "zh-startup-07"],
+              "fallbackOutcome": "领导回了句“理解”，转头就去联系别人。你还有两周时间，但那个位置已经不一定等你了。等你再回来问，团队里可能已经坐着另一个人。"
+            }
+          ],
+          "echoes": {
+            "leap": { "title": "另一边的你正在签合同", "text": "协议里的股权稀释没写清楚。你很兴奋，也有点不踏实。", "sourceIds": ["zh-startup-04", "zh-startup-07"] },
+            "bridge": { "title": "另一边的你列了一张清单", "text": "客户、现金、股权、退出办法，一项项查完再决定。", "sourceIds": ["zh-startup-01", "zh-startup-02"] }
+          }
+        },
+        {
+          "id": "stay-act-2",
+          "act": 2,
+          "timeLabel": "第90天",
+          "sceneTitle": "晋升延期了，创业团队有客户了",
+          "setup": "三个月过去，公司还没给晋升结论，创业团队却拿到了第一个客户意向。你准备怎么走下一步？",
+          "fallbackNarrative": "第九十天，工资照常到账，晋升评审却晚了两周。另一边，创业团队发来了第一张客户意向截图。你没断收入，但心里开始犯嘀咕。",
+          "sourceIds": ["zh-startup-02", "zh-startup-03", "zh-startup-07"],
+          "actions": [
+            {
+              "id": "stay-2-critical-project",
+              "label": "接下难项目，拼一次晋升",
+              "description": "接下没人愿意碰的项目，看看公司会不会兑现晋升。",
+              "delta": { "cashSafety": 5, "careerOptionality": 4, "growthSlope": 10, "relationshipCapital": -3, "wellbeingLoad": 12, "valueAlignment": 4 },
+              "benefits": ["升职加薪的机会更大", "能留下一个拿得出手的项目"],
+              "costs": ["工作量一下变大", "创业团队早期的重要决定与你无关"],
+              "addFacts": ["公司答应晋升时，会不会真的给人和预算"],
+              "addCommitments": ["这个季度做完关键项目"],
+              "irreversibleEvents": ["未来三个月主要精力都要放在公司项目上"],
+              "sourceIds": ["zh-startup-03", "zh-startup-07"],
+              "fallbackOutcome": "你接下了那个烫手项目，名字开始出现在管理层周报里。升职更近了，晚上也被会议占满了。创业团队再讨论产品时，已经不会特意问你。"
+            },
+            {
+              "id": "stay-2-market-interviews",
+              "label": "出去面试三次，看看自己值多少",
+              "description": "先不跳槽，找三个外部岗位聊聊薪资和级别。",
+              "delta": { "cashSafety": 0, "careerOptionality": 14, "growthSlope": 4, "relationshipCapital": -5, "wellbeingLoad": 8, "valueAlignment": 2 },
+              "benefits": ["知道自己在市场上到底值多少", "以后谈条件或离开更有底"],
+              "costs": ["准备面试要占休息时间", "被公司发现会伤信任"],
+              "addFacts": ["你现在的能力，在外面能拿到什么岗位和薪资"],
+              "addCommitments": ["至少聊完三家公司再下结论"],
+              "irreversibleEvents": ["招聘市场已经知道你在看机会"],
+              "sourceIds": ["zh-startup-03", "zh-startup-07"],
+              "fallbackOutcome": "三次面试的反馈不一样。有人认可你的经验，也有人直说你的技能落后了。你没马上走，但“大不了再找工作”这句话终于有了真实报价。"
+            },
+            {
+              "id": "stay-2-optimize-stability",
+              "label": "不冲晋升，先把日子过稳",
+              "description": "不接高风险项目，保住绩效，多存钱，多陪家人。",
+              "delta": { "cashSafety": 8, "careerOptionality": -5, "growthSlope": -8, "relationshipCapital": 5, "wellbeingLoad": -6, "valueAlignment": -3 },
+              "benefits": ["存款继续增加，也有时间顾家", "人没那么累了"],
+              "costs": ["成长和影响力都会慢下来", "以后可能越来越离不开这家公司"],
+              "addFacts": ["少加班以后，绩效还能不能保住"],
+              "addCommitments": ["下个季度先存钱、休息"],
+              "irreversibleEvents": ["这轮晋升你不再争了"],
+              "sourceIds": ["zh-startup-03"],
+              "fallbackOutcome": "你重新有时间吃晚饭、睡整觉，存款也涨了。晋升名单出来时，没有你的名字。现在更稳了，以后谈条件的筹码也少了一些。"
+            }
+          ],
+          "echoes": {
+            "leap": { "title": "另一边的你快发不出工资了", "text": "你学得很快，银行卡余额掉得也很快。团队开始商量要不要晚发工资。", "sourceIds": ["zh-startup-04", "zh-startup-08"] },
+            "bridge": { "title": "另一边的你聊完了十二个客户", "text": "十二个人里，夸产品的不少，愿意马上付款的却只有一个。", "sourceIds": ["zh-startup-02", "zh-startup-03"] }
+          }
+        },
+        {
+          "id": "stay-act-3",
+          "act": 3,
+          "timeLabel": "一年后重逢",
+          "sceneTitle": "一年后，你们又见面了",
+          "setup": "现公司的路更清楚了，创业团队也有了真实结果。现在你可以再选一次。",
+          "fallbackNarrative": "一年后的咖啡馆里，前领导看起来更累了。你们都知道，争论当初谁选对了没意义。眼下只看一件事：下一步怎么走。",
+          "sourceIds": ["zh-startup-02", "zh-startup-03", "zh-startup-07"],
+          "actions": [
+            {
+              "id": "stay-3-three-year-track",
+              "label": "接受晋升，再干三年",
+              "description": "接下更高职位和长期项目，把重心继续放在现公司。",
+              "delta": { "cashSafety": 14, "careerOptionality": -8, "growthSlope": 5, "relationshipCapital": 6, "wellbeingLoad": 8, "valueAlignment": 2 },
+              "benefits": ["收入和话语权都提高", "家里的安排更好做"],
+              "costs": ["越来越依赖这家公司", "以后再去创业会更舍不得"],
+              "addFacts": ["晋升后到底有多少决定权，长期奖励有多少"],
+              "addCommitments": ["接下一个要做三年的核心项目"],
+              "irreversibleEvents": ["接受了更难中途离开的岗位和奖金安排"],
+              "sourceIds": ["zh-startup-03", "zh-startup-07"],
+              "fallbackOutcome": "头衔、加薪和更大的团队都拿到了。留下不是胆怯，是你现在真心愿意选的路。只是条件越好，三年后想走也会更难。"
+            },
+            {
+              "id": "stay-3-evidence-based-join",
+              "label": "公司站稳了，现在再加入",
+              "description": "客户、现金和合同都看清后再辞职。加入晚一点，但条件更明白。",
+              "delta": { "cashSafety": -12, "careerOptionality": 5, "growthSlope": 18, "relationshipCapital": 4, "wellbeingLoad": 14, "valueAlignment": 12 },
+              "benefits": ["公司行不行已经有实际数据", "能用自己的经验谈清岗位"],
+              "costs": ["早期股权和核心位置已经没了", "辞职后收入还是会波动"],
+              "addFacts": ["对方有付费客户、够用的现金和写清楚的股权"],
+              "addCommitments": ["加入后负责一个说得清的业务目标"],
+              "irreversibleEvents": ["正式离开现公司"],
+              "sourceIds": ["zh-startup-01", "zh-startup-02", "zh-startup-07"],
+              "fallbackOutcome": "你不是最早那批人，股份少了一些，但公司有多少客户、还有多少钱都看得见。你还是辞职了，这次不是只凭对领导的信任。"
+            },
+            {
+              "id": "stay-3-side-incubation",
+              "label": "继续上班，做自己的小项目",
+              "description": "工资照拿，每周固定六小时做一个自己的项目。",
+              "delta": { "cashSafety": 2, "careerOptionality": 12, "growthSlope": 9, "relationshipCapital": -4, "wellbeingLoad": 15, "valueAlignment": 8 },
+              "benefits": ["工资还在，也开始有自己的东西", "能练习自己找客户、卖产品"],
+              "costs": ["周末和陪家人的时间会变少", "投入有限，项目很容易半途而废"],
+              "addFacts": ["你能不能每周拿出六小时，并收到真实用户反馈"],
+              "addCommitments": ["连续十二周，每周花六小时做副项目"],
+              "irreversibleEvents": ["第一版个人产品已经公开发布"],
+              "sourceIds": ["zh-startup-02", "zh-startup-03"],
+              "fallbackOutcome": "你没有跟前领导走，而是做了自己的小项目。工资照常到账，周末却不再全是休息。项目还赚不了多少钱，但至少不是只能等别人给机会。"
+            }
+          ],
+          "echoes": {
+            "leap": { "title": "另一边的你在想还要不要继续", "text": "你真的做过一年创业，钱、身体和关系也都付过代价。现在得看还值不值得。", "sourceIds": ["zh-startup-06", "zh-startup-08"] },
+            "bridge": { "title": "另一边的你拿着一张结果清单", "text": "每个结论都能对上一次客户访谈、一笔付款或一条合同。", "sourceIds": ["zh-startup-01", "zh-startup-02"] }
+          }
+        }
+      ]
+    },
+    {
+      "id": "leap",
+      "name": "全押新局",
+      "tagline": "决定去，但合同得先看清。",
+      "initialState": { "cashSafety": 57, "careerOptionality": 53, "growthSlope": 74, "relationshipCapital": 60, "wellbeingLoad": 68, "valueAlignment": 72 },
+      "startingPoint": "你决定辞职跟领导走。现在最要紧的，是把工资、股权和退出办法谈清楚。",
+      "acts": [
+        {
+          "id": "leap-act-1",
+          "act": 1,
+          "timeLabel": "承诺之夜",
+          "sceneTitle": "辞职前，先把合同看清",
+          "setup": "领导催你今晚答复，职位和期权都只是口头说法，完整合同还没发来。",
+          "fallbackNarrative": "凌晨一点，领导发来一句“不会亏待你”。辞职邮件已经写好了，可工资、股权、谁说了算、想走怎么办，都还在几段语音里。",
+          "sourceIds": ["zh-startup-01", "zh-startup-04", "zh-startup-07"],
+          "actions": [
+            {
+              "id": "leap-1-signed-terms",
+              "label": "合同写清楚，再交辞职信",
+              "description": "把岗位、工资、股权怎么算、离职怎么办，全写进合同。",
+              "delta": { "cashSafety": -12, "careerOptionality": -5, "growthSlope": 10, "relationshipCapital": -6, "wellbeingLoad": 12, "valueAlignment": 10 },
+              "benefits": ["口头承诺不容易赖掉", "现在就能发现双方哪里谈不拢"],
+              "costs": ["领导可能觉得你不信任他", "谈太久可能错过位置"],
+              "addFacts": ["股权怎么拿、怎么稀释，工资和退出条件都写进合同"],
+              "addCommitments": ["合同签好后按约定时间到岗"],
+              "irreversibleEvents": ["正式提交辞职"],
+              "sourceIds": ["zh-startup-01", "zh-startup-04", "zh-startup-07"],
+              "fallbackOutcome": "谈合同的时候，气氛第一次冷了下来。最后拿到的股权没口头说的多，但什么时候归你、离开时怎么算，都写清楚了。至少以后不用靠猜。"
+            },
+            {
+              "id": "leap-1-verbal-trust",
+              "label": "先辞职，合同以后再补",
+              "description": "先相信领导，下周就入职，合同等融资后统一补。",
+              "delta": { "cashSafety": -18, "careerOptionality": -10, "growthSlope": 14, "relationshipCapital": 8, "wellbeingLoad": 9, "valueAlignment": 12 },
+              "benefits": ["最快进核心团队", "能参与最早的产品和人员决定"],
+              "costs": ["工资和股权都没书面保障", "辞职后再谈条件更被动"],
+              "addFacts": ["领导愿不愿现在就让你参与关键决定"],
+              "addCommitments": ["下周全职到岗，负责做出第一版"],
+              "irreversibleEvents": ["合同还没写完整，你已经辞职"],
+              "sourceIds": ["zh-startup-04", "zh-startup-07"],
+              "fallbackOutcome": "团队请你吃了顿夜宵，大家很快把你当自己人。合同却被一句“融资后再补”推后了。辞职信交出去以后，再谈条件就没现在硬气了。"
+            },
+            {
+              "id": "leap-1-cliff-exit",
+              "label": "可以降薪，但三个月后必须复盘",
+              "description": "短期少拿工资，换来明确的业务目标、股权条件和退出办法。",
+              "delta": { "cashSafety": -10, "careerOptionality": -2, "growthSlope": 12, "relationshipCapital": -3, "wellbeingLoad": 10, "valueAlignment": 10 },
+              "benefits": ["三个月后有数字可对", "公司不行时更容易退出"],
+              "costs": ["眼下收入会少", "合同写得再清楚，公司也可能失败"],
+              "addFacts": ["三个月内产品、现金和你这个岗位各要做到什么"],
+              "addCommitments": ["三个月复盘前，先接受谈好的低工资"],
+              "irreversibleEvents": ["现公司的岗位没了，股权开始分期拿"],
+              "sourceIds": ["zh-startup-01", "zh-startup-07"],
+              "fallbackOutcome": "你少拿一部分工资，换来三个月后的明确复盘。它保不了公司成功，但到时候做没做到，不用靠争吵判断。领导犹豫了一会儿，最后同意了。"
+            }
+          ],
+          "echoes": {
+            "stay": { "title": "另一边的你在谈晋升", "text": "你没离开，但要求公司把九十天内给什么资源、什么时候评审写清楚。", "sourceIds": ["zh-startup-03", "zh-startup-07"] },
+            "bridge": { "title": "另一边的你还没辞职", "text": "你提出先试四周。核心位置不一定等你，但工资暂时还在。", "sourceIds": ["zh-startup-01", "zh-startup-02"] }
+          }
+        },
+        {
+          "id": "leap-act-2",
+          "act": 2,
+          "timeLabel": "第90天",
+          "sceneTitle": "公司只剩两个月工资",
+          "setup": "产品改了五次，融资还没到，付费客户只有一个。领导问大家能不能晚两个月拿工资。",
+          "fallbackNarrative": "第九十天，产品已经改了五版，付费客户还是只有一个。领导说“再熬两个月就好”，想把工资往后推。你学到了很多，银行卡也快扛不住了。",
+          "sourceIds": ["zh-startup-04", "zh-startup-06", "zh-startup-08"],
+          "actions": [
+            {
+              "id": "leap-2-all-in-delay-pay",
+              "label": "同意晚发工资，再拼两个月",
+              "description": "两个月工资先欠着，跟团队把新版产品做完。",
+              "delta": { "cashSafety": -20, "careerOptionality": -8, "growthSlope": 14, "relationshipCapital": 4, "wellbeingLoad": 18, "valueAlignment": 6 },
+              "benefits": ["继续参与最核心的产品决定", "团队会觉得你愿意一起扛"],
+              "costs": ["存款和家里的压力立刻变大", "投得越多，以后越难停"],
+              "addFacts": ["账上的钱只够撑两个月"],
+              "addCommitments": ["同意两个月后再领工资"],
+              "irreversibleEvents": ["公司已经欠你一笔工资"],
+              "sourceIds": ["zh-startup-04", "zh-startup-08"],
+              "fallbackOutcome": "你第一个同意晚发工资，大家一下有了精神。回到家，银行卡余额又让你冷静下来。你学得越来越快，也越来越不愿承认下一版产品可能还是卖不动。"
+            },
+            {
+              "id": "leap-2-budget-stopline",
+              "label": "把账摊开，先砍项目",
+              "description": "公开公司还有多少钱，停掉非核心项目，六周卖不出去就不再扩张。",
+              "delta": { "cashSafety": -8, "careerOptionality": 6, "growthSlope": 9, "relationshipCapital": -10, "wellbeingLoad": 11, "valueAlignment": 8 },
+              "benefits": ["大家终于按账上现金做决定", "什么时候停，有明确标准"],
+              "costs": ["你会和领导正面冲突", "停项目可能逼走队友"],
+              "addFacts": ["公司还有多少钱、欠多少钱、客户多久付款"],
+              "addCommitments": ["接下来六周只盯一个能收钱的目标"],
+              "irreversibleEvents": ["两个项目已经停掉，相关外包也结束了"],
+              "sourceIds": ["zh-startup-01", "zh-startup-04", "zh-startup-07"],
+              "fallbackOutcome": "现金表第一次投到大屏上，会议室安静了。停掉两个项目后，公司多撑了几周，你也和领导大吵了一次。以后你们只能靠规则合作，不能只靠以前的交情。"
+            },
+            {
+              "id": "leap-2-build-exit",
+              "label": "一边交付，一边找下家",
+              "description": "先把当前版本做完，同时更新简历、联系招聘方，定好哪天走。",
+              "delta": { "cashSafety": -7, "careerOptionality": 15, "growthSlope": 3, "relationshipCapital": -12, "wellbeingLoad": 10, "valueAlignment": -2 },
+              "benefits": ["提前知道还能找到什么工作", "不用等钱花完才求职"],
+              "costs": ["白天创业、晚上面试，更累", "团队会觉得你要撤了"],
+              "addFacts": ["外面的公司怎么看你这段创业经历"],
+              "addCommitments": ["做完这一版，就按定好的日期决定走不走"],
+              "irreversibleEvents": ["你已经公开开始找工作"],
+              "sourceIds": ["zh-startup-04", "zh-startup-06"],
+              "fallbackOutcome": "你白天改产品，晚上改简历。第一家公司不愿给原来的工资，第二家认可你从零做产品的经历。退路确实有，只是不是毫无损失。团队也看出你在准备离开。"
+            }
+          ],
+          "echoes": {
+            "stay": { "title": "另一边的你工资照常到账", "text": "钱很稳，但晋升又延期了。公司答应的事还没兑现。", "sourceIds": ["zh-startup-03", "zh-startup-07"] },
+            "bridge": { "title": "另一边的你只拿到一笔付款", "text": "说有兴趣的客户很多，真正愿意预付的只有一个。", "sourceIds": ["zh-startup-02", "zh-startup-03"] }
+          }
+        },
+        {
+          "id": "leap-act-3",
+          "act": 3,
+          "timeLabel": "一年后重逢",
+          "sceneTitle": "干了一年，还要继续吗？",
+          "setup": "公司没做大，也没倒。你学会了做产品、谈客户、看现金，但钱、睡眠和关系都受了影响。",
+          "fallbackNarrative": "周年聚餐上，大家又聊起最早那个晚上。现在你会看账、会谈客户，也敢停项目。代价也摆在眼前：存款少了，人更累，有些关系回不到以前。",
+          "sourceIds": ["zh-startup-04", "zh-startup-06", "zh-startup-08"],
+          "actions": [
+            {
+              "id": "leap-3-double-down",
+              "label": "客户开始付钱，再干一年",
+              "description": "新增客户真的付了钱。继续做，但不乱扩张，每月看一次现金。",
+              "delta": { "cashSafety": -15, "careerOptionality": -5, "growthSlope": 18, "relationshipCapital": -4, "wellbeingLoad": 17, "valueAlignment": 10 },
+              "benefits": ["前一年的积累可能终于见效", "还能继续自己做主、快速成长"],
+              "costs": ["钱、身体和关系还要继续扛", "一个好季度很容易让人冲过头"],
+              "addFacts": ["新客户真的付了钱，也能看出会不会再买"],
+              "addCommitments": ["只有现金够撑十二个月，并且每月复盘，才继续做"],
+              "irreversibleEvents": ["你拒绝了眼前一份还不错的工作"],
+              "sourceIds": ["zh-startup-05", "zh-startup-08"],
+              "fallbackOutcome": "你继续，不是因为已经熬了一年，而是客户真的付了钱，还有人愿意续费。但一个好季度不代表以后都会好。第二年照样要盯着现金，也要知道什么时候停。"
+            },
+            {
+              "id": "leap-3-renegotiate-stepback",
+              "label": "退一步，改做有限顾问",
+              "description": "少拿一些股权，不再管所有事，换回工资和正常生活。",
+              "delta": { "cashSafety": 4, "careerOptionality": 13, "growthSlope": 3, "relationshipCapital": -8, "wellbeingLoad": -8, "valueAlignment": 6 },
+              "benefits": ["经验和合作关系还能留下", "收入和生活能慢慢恢复"],
+              "costs": ["要放弃一部分股权和核心位置", "老队友可能觉得你临阵后退"],
+              "addFacts": ["团队能不能接受你只按结果收费、只做顾问"],
+              "addCommitments": ["六周内交接完，以后只做有限顾问"],
+              "irreversibleEvents": ["还没拿到手的部分期权放弃了"],
+              "sourceIds": ["zh-startup-04", "zh-startup-07"],
+              "fallbackOutcome": "你不再参加每场会，也不用凌晨回所有消息。没到手的期权放弃了，生活终于有了空。你和团队还有裂痕，但至少不用再硬撑。"
+            },
+            {
+              "id": "leap-3-shutdown-return",
+              "label": "停下来，重新找工作",
+              "description": "承认这门生意还没跑通，处理完客户、员工和欠款后去求职。",
+              "delta": { "cashSafety": 6, "careerOptionality": 8, "growthSlope": 5, "relationshipCapital": -5, "wellbeingLoad": -12, "valueAlignment": 2 },
+              "benefits": ["不再继续烧钱、熬身体", "这一年做过的事还能写进简历"],
+              "costs": ["工资和级别可能回不到原来", "得告别创始人身份和一些关系"],
+              "addFacts": ["这一年经历，在外面能换来什么岗位和薪资"],
+              "addCommitments": ["把客户、员工和欠款都正式交接完"],
+              "irreversibleEvents": ["你不再管公司，也不再担任创始岗位"],
+              "sourceIds": ["zh-startup-04", "zh-startup-06"],
+              "fallbackOutcome": "公司停了。找工作时，旧工资和级别没有原样回来，但有人认可你从零做产品、谈客户的经历。结局不漂亮，不过收入和睡眠开始恢复。"
+            }
+          ],
+          "echoes": {
+            "stay": { "title": "另一边的你被升职加薪留下", "text": "职位和工资都更高了。可条件越好，想转身也越难。", "sourceIds": ["zh-startup-03"] },
+            "bridge": { "title": "另一边的你四周就发现了问题", "text": "没有创始人头衔，但客户和合同很早就告诉你哪些承诺不靠谱。", "sourceIds": ["zh-startup-01", "zh-startup-02"] }
+          }
+        }
+      ]
+    },
+    {
+      "id": "bridge",
+      "name": "搭桥试水",
+      "tagline": "先试四周，再决定辞不辞职。",
+      "initialState": { "cashSafety": 75, "careerOptionality": 79, "growthSlope": 62, "relationshipCapital": 66, "wellbeingLoad": 67, "valueAlignment": 67 },
+      "startingPoint": "你先不辞职，跟领导约好试四周。工资保住了，但接下来一段时间，你得白天上班、晚上验证。",
+      "acts": [
+        {
+          "id": "bridge-act-1",
+          "act": 1,
+          "timeLabel": "承诺之夜",
+          "sceneTitle": "先试四周，别急着辞职",
+          "setup": "领导只给你四周。你得尽快弄清三件事：有没有客户、公司还有多少钱、给你的条件算不算数。",
+          "fallbackNarrative": "你提出先试四周。领导觉得你不够干脆，家里又担心你两头忙。还没开始，你已经要处理两边的压力。",
+          "sourceIds": ["zh-startup-01", "zh-startup-02", "zh-startup-07"],
+          "actions": [
+            {
+              "id": "bridge-1-evidence-sprint",
+              "label": "把四周要查的事写下来",
+              "description": "和领导写清楚：客户、现金、岗位、股权分别要查什么，哪天给结果。",
+              "delta": { "cashSafety": 0, "careerOptionality": 12, "growthSlope": 8, "relationshipCapital": -4, "wellbeingLoad": 12, "valueAlignment": 9 },
+              "benefits": ["四周后能拿事实做决定", "不会一直试下去"],
+              "costs": ["领导可能觉得你不够信任他", "接下来四周几乎没有空闲晚上"],
+              "addFacts": ["每项材料由谁提供、什么时候给"],
+              "addCommitments": ["四周后必须决定加入还是退出"],
+              "irreversibleEvents": ["领导开始找能马上加入的人"],
+              "sourceIds": ["zh-startup-01", "zh-startup-02", "zh-startup-07"],
+              "fallbackOutcome": "你把口头邀请写成了一张清单。领导有点不高兴，但还是答应拿客户、现金和合同说话。工资暂时保住了，接下来四周的晚上也基本排满了。"
+            },
+            {
+              "id": "bridge-1-customer-interviews",
+              "label": "晚上找十二个客户聊聊",
+              "description": "不听融资故事，直接问客户有没有这个问题、愿不愿意付钱。",
+              "delta": { "cashSafety": 0, "careerOptionality": 10, "growthSlope": 10, "relationshipCapital": -3, "wellbeingLoad": 15, "valueAlignment": 8 },
+              "benefits": ["能听到客户的真话", "知道谁真愿意付钱"],
+              "costs": ["晚上和周末都得搭进去", "客户说喜欢，不代表会掏钱"],
+              "addFacts": ["客户有多痛、预算多少、为什么不买"],
+              "addCommitments": ["只认付款或明确的采购承诺"],
+              "irreversibleEvents": ["你已经用自己的名字接触客户"],
+              "sourceIds": ["zh-startup-02", "zh-startup-03"],
+              "fallbackOutcome": "十二个人里，夸产品的不少，真想付款的只有一个。还有三个人直接说不会买。答案不算好听，但至少你不再只靠感觉判断。"
+            },
+            {
+              "id": "bridge-1-cap-table-first",
+              "label": "先看合同、股权表和账上现金",
+              "description": "先不做产品。请领导拿出付款凭证、股权表、现金余额和你的权限。",
+              "delta": { "cashSafety": 1, "careerOptionality": 8, "growthSlope": 4, "relationshipCapital": -7, "wellbeingLoad": 7, "valueAlignment": 7 },
+              "benefits": ["很快就能看出承诺靠不靠谱", "少做无用功"],
+              "costs": ["领导可能觉得你在查他", "这段时间学不到产品实战"],
+              "addFacts": ["付款凭证、股权表、现金余额和谁说了算"],
+              "addCommitments": ["材料没看清前不辞职"],
+              "irreversibleEvents": ["你明确告诉领导：口头承诺不算数"],
+              "sourceIds": ["zh-startup-01", "zh-startup-07"],
+              "fallbackOutcome": "领导先问你是不是不信任他，后来还是发来了股权表。几处数字和之前说的不太一样。你还没做产品，却先看清了这家公司手里到底有什么。"
+            }
+          ],
+          "echoes": {
+            "stay": { "title": "另一边的你已经说不去了", "text": "你保住了工资，也开始谈晋升。不过产品和股权怎么定，创业团队不会再等你。", "sourceIds": ["zh-startup-03", "zh-startup-07"] },
+            "leap": { "title": "另一边的你已经辞职", "text": "你最早进了核心团队，但工资没了，后面再谈条件也更被动。", "sourceIds": ["zh-startup-04", "zh-startup-07"] }
+          }
+        },
+        {
+          "id": "bridge-act-2",
+          "act": 2,
+          "timeLabel": "第90天",
+          "sceneTitle": "有一笔付款，然后呢？",
+          "setup": "试了九十天，终于有一个客户付钱，但另外九个都拒绝了。领导催你全职，现公司也开始问你最近为什么分心。",
+          "fallbackNarrative": "九十天过去，表格里有一笔付款，也有九次拒绝。领导催你全职，现公司开始问你是不是分心了。现在知道得更多，决定反而更难下。",
+          "sourceIds": ["zh-startup-01", "zh-startup-02", "zh-startup-03"],
+          "actions": [
+            {
+              "id": "bridge-2-conditional-join",
+              "label": "条件谈妥，再正式加入",
+              "description": "拿这笔付款去谈岗位、工资和股权，并约好六个月后重新决定去留。",
+              "delta": { "cashSafety": -5, "careerOptionality": 10, "growthSlope": 12, "relationshipCapital": 4, "wellbeingLoad": 13, "valueAlignment": 11 },
+              "benefits": ["手里有客户付款，谈条件更有底气", "六个月后还能重新决定"],
+              "costs": ["加入后照样可能少拿工资", "谈条件可能让领导失去耐心"],
+              "addFacts": ["已有一笔付款，六个月要做到什么也写清了"],
+              "addCommitments": ["条件写清后按计划离职"],
+              "irreversibleEvents": ["你向现公司给出了离职日期"],
+              "sourceIds": ["zh-startup-02", "zh-startup-07"],
+              "fallbackOutcome": "你说可以加入，但先把工资、股权和六个月目标写进合同。领导答应了大部分条件。你也把离职日期告诉了现公司，这次真的没有退回原样的路了。"
+            },
+            {
+              "id": "bridge-2-narrow-extend",
+              "label": "再试六周，只盯重复付款",
+              "description": "一笔付款还不够。只做一类客户，看能不能再卖出去一次。",
+              "delta": { "cashSafety": 1, "careerOptionality": 7, "growthSlope": 6, "relationshipCapital": -5, "wellbeingLoad": 11, "valueAlignment": 5 },
+              "benefits": ["能看出第一单是不是碰巧", "更了解客户为什么买"],
+              "costs": ["还要再忙六周", "团队可能觉得你根本不想加入"],
+              "addFacts": ["同一类客户有没有第二次付款"],
+              "addCommitments": ["六周后必须加入或退出，不再续"],
+              "irreversibleEvents": ["这轮核心岗位不会再给你留着"],
+              "sourceIds": ["zh-startup-02", "zh-startup-03"],
+              "fallbackOutcome": "你不再数有多少人说喜欢，只看第二笔付款来不来。领导的耐心越来越少，也开始把核心工作交给别人。你还有六周，之后必须给答案。"
+            },
+            {
+              "id": "bridge-2-exit-experiment",
+              "label": "条件对不上，马上退出",
+              "description": "股权和权限跟之前说的不一样。停止帮忙，把资料和客户交接清楚。",
+              "delta": { "cashSafety": 5, "careerOptionality": 9, "growthSlope": 2, "relationshipCapital": -10, "wellbeingLoad": -6, "valueAlignment": 8 },
+              "benefits": ["辞职前就发现了问题", "工资和存款都保住了"],
+              "costs": ["你和领导很难再像以前一样", "以后公司做成了，你也不在里面"],
+              "addFacts": ["口头说的股权和权限与文件明显不符"],
+              "addCommitments": ["还回资料，向客户说清自己不再参与"],
+              "irreversibleEvents": ["你正式退出这次创业"],
+              "sourceIds": ["zh-startup-01", "zh-startup-04", "zh-startup-07"],
+              "fallbackOutcome": "你把文件和之前的说法一条条对上，差得太多。领导说创业公司变化快，你还是决定停下。关系受了伤，但问题是在辞职前发现的。"
+            }
+          ],
+          "echoes": {
+            "stay": { "title": "另一边的你还在等晋升", "text": "工资照常发，日子也更稳。只是公司答应的晋升，到现在还没给准信。", "sourceIds": ["zh-startup-03", "zh-startup-07"] },
+            "leap": { "title": "另一边的你只剩两个月工资", "text": "你学得很快，也站在核心位置。但公司账上的钱，只够再发两个月工资。", "sourceIds": ["zh-startup-04", "zh-startup-08"] }
+          }
+        },
+        {
+          "id": "bridge-act-3",
+          "act": 3,
+          "timeLabel": "一年后重逢",
+          "sceneTitle": "一年过去，该做决定了",
+          "setup": "你已经试得够久了。现在只有三种选择：正式加入、留在现公司，或者自己继续做小项目。",
+          "fallbackNarrative": "一年后，你又翻开最初那张清单。客户付没付钱、股权怎么写、家里能不能扛，你都查过了。现在不能再拖。",
+          "sourceIds": ["zh-startup-02", "zh-startup-03", "zh-startup-05", "zh-startup-07"],
+          "actions": [
+            {
+              "id": "bridge-3-validated-join",
+              "label": "条件都过关，正式加入",
+              "description": "客户、公司现金、合同和家庭预算都能接受，辞职全职加入。",
+              "delta": { "cashSafety": -10, "careerOptionality": 3, "growthSlope": 16, "relationshipCapital": 5, "wellbeingLoad": 12, "valueAlignment": 12 },
+              "benefits": ["不是凭感觉辞职", "岗位和退出条件已经写清"],
+              "costs": ["加入得晚，股权可能更少", "创业照样会累，也可能失败"],
+              "addFacts": ["客户、公司现金、合同和家庭预算都过关"],
+              "addCommitments": ["全职加入，每月复盘一次，六个月再决定"],
+              "irreversibleEvents": ["正式离开现公司"],
+              "sourceIds": ["zh-startup-02", "zh-startup-07"],
+              "fallbackOutcome": "你辞职加入了。这次不是因为领导说“相信我”，而是客户真的付了钱，合同和家里的预算也都谈清了。风险还在，但至少你知道自己在赌什么。"
+            },
+            {
+              "id": "bridge-3-internal-transfer",
+              "label": "不去创业，转到公司新岗位",
+              "description": "留在现公司，用这段客户验证经历去争取创新或增长岗位。",
+              "delta": { "cashSafety": 9, "careerOptionality": 6, "growthSlope": 7, "relationshipCapital": 5, "wellbeingLoad": -5, "valueAlignment": 6 },
+              "benefits": ["工资保住了，新经验也能用上", "不用再两头忙"],
+              "costs": ["创业公司以后做成也与你无关", "得修复现公司对你的信任"],
+              "addFacts": ["现公司是否认可你做客户验证和新项目的能力"],
+              "addCommitments": ["接下一个内部新项目，不再参与外部执行"],
+              "irreversibleEvents": ["明确放弃本轮创业加入机会"],
+              "sourceIds": ["zh-startup-03"],
+              "fallbackOutcome": "你没有加入创业团队，但靠这九十天的经历换到了公司里的新岗位。创业公司的机会放弃了，工作却不再只是原地重复。"
+            },
+            {
+              "id": "bridge-3-quarterly-venture",
+              "label": "每季度做一个自己的小项目",
+              "description": "不加入原团队。每三个月做一个能收费的小项目，看看自己能不能卖出去。",
+              "delta": { "cashSafety": 2, "careerOptionality": 13, "growthSlope": 10, "relationshipCapital": -3, "wellbeingLoad": 14, "valueAlignment": 9 },
+              "benefits": ["慢慢攒自己的客户和收入", "以后还有别的选择"],
+              "costs": ["下班后还是要继续干活", "投入不够，项目很难做大"],
+              "addFacts": ["每季度能不能拿到一笔真实付款"],
+              "addCommitments": ["每季度只做一个项目，到期就复盘"],
+              "irreversibleEvents": ["你公开了第一个收费项目"],
+              "sourceIds": ["zh-startup-03", "zh-startup-05"],
+              "fallbackOutcome": "你没有继续半加入，而是每季度做一个自己的小项目。速度不快，但每三个月都会知道一次：有没有人愿意为你的东西付钱。"
+            }
+          ],
+          "echoes": {
+            "stay": { "title": "另一边的你已经升职", "text": "职位和收入都涨了。可条件越好，现在想走也越难。", "sourceIds": ["zh-startup-03"] },
+            "leap": { "title": "另一边的你真的创业了一年", "text": "客户、现金、裁人都亲手做过。代价也很直接：钱少了，人更累，关系也变了。", "sourceIds": ["zh-startup-06", "zh-startup-08"] }
+          }
+        }
+      ]
+    }
+  ]
+}
