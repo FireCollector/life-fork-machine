@@ -45,32 +45,32 @@ TASK-027 产品定义
 
 ## 任务列表
 
-| Task     | 状态    | 依赖              | 目标结果                         |
-| -------- | ------- | ----------------- | -------------------------------- |
-| TASK-027 | Ready   | D01–D26 Demo 基线 | 冻结长期产品定义与成功指标       |
-| TASK-028 | Planned | TASK-027          | 完成第一轮真实用户研究           |
-| TASK-029 | Planned | TASK-027、028     | 冻结 AI 与规则引擎边界           |
-| TASK-030 | Planned | TASK-029          | 建立服务端 AI Provider 网关      |
-| TASK-031 | Planned | TASK-030          | 把任意议题整理成可编辑决策简报   |
-| TASK-032 | Planned | TASK-031          | 建立动态知乎证据检索管线         |
-| TASK-033 | Planned | TASK-032          | 将回答整理为可追溯观点与证据结构 |
-| TASK-034 | Planned | TASK-031、033     | 生成可审核的候选 ScenarioPack    |
-| TASK-035 | Planned | TASK-034          | 接入动态叙事与针对性追问         |
-| TASK-036 | Planned | TASK-031–035      | 建立 AI 评测和隐藏输入测试集     |
-| TASK-037 | Planned | TASK-034–036      | 交付第二个完整可玩议题           |
-| TASK-038 | Planned | TASK-037          | 分离演示实验与真实七天实验       |
-| TASK-039 | Planned | TASK-038          | 根据真实反馈动态调整实验         |
-| TASK-040 | Planned | TASK-038、039     | 建立长期决策档案与复盘           |
-| TASK-041 | Planned | TASK-032、033     | 支持从知乎问题或内容链接开始     |
-| TASK-042 | Planned | TASK-040、041     | 把验证结果整理回知乎表达         |
-| TASK-043 | Planned | TASK-040          | 加入受控多人视角与经验贡献       |
-| TASK-044 | Planned | TASK-040          | 建立账号、云端会话与隐私中心     |
-| TASK-045 | Planned | TASK-034、044     | 建立场景编辑与内容运营后台       |
-| TASK-046 | Planned | TASK-030、044     | 补齐可观测性、可靠性和安全       |
-| TASK-047 | Planned | TASK-028、037     | 完成体验、无障碍与性能优化       |
-| TASK-048 | Planned | TASK-044–047      | 公开部署并建立持续验证机制       |
-| TASK-049 | Planned | TASK-037、040     | 探索有证据边界的未来自我角色     |
-| TASK-050 | Planned | TASK-033、037     | 探索对立观点议事桌               |
-| TASK-051 | Planned | TASK-040、044     | 探索个人决策模式回顾             |
+| Task     | 状态        | 依赖              | 目标结果                         |
+| -------- | ----------- | ----------------- | -------------------------------- |
+| TASK-027 | In Progress | D01–D26 Demo 基线 | 冻结长期产品定义与成功指标       |
+| TASK-028 | Planned     | TASK-027          | 完成第一轮真实用户研究           |
+| TASK-029 | Planned     | TASK-027、028     | 冻结 AI 与规则引擎边界           |
+| TASK-030 | Planned     | TASK-029          | 建立服务端 AI Provider 网关      |
+| TASK-031 | Planned     | TASK-030          | 把任意议题整理成可编辑决策简报   |
+| TASK-032 | Planned     | TASK-031          | 建立动态知乎证据检索管线         |
+| TASK-033 | Planned     | TASK-032          | 将回答整理为可追溯观点与证据结构 |
+| TASK-034 | Planned     | TASK-031、033     | 生成可审核的候选 ScenarioPack    |
+| TASK-035 | Planned     | TASK-034          | 接入动态叙事与针对性追问         |
+| TASK-036 | Planned     | TASK-031–035      | 建立 AI 评测和隐藏输入测试集     |
+| TASK-037 | Planned     | TASK-034–036      | 交付第二个完整可玩议题           |
+| TASK-038 | Planned     | TASK-037          | 分离演示实验与真实七天实验       |
+| TASK-039 | Planned     | TASK-038          | 根据真实反馈动态调整实验         |
+| TASK-040 | Planned     | TASK-038、039     | 建立长期决策档案与复盘           |
+| TASK-041 | Planned     | TASK-032、033     | 支持从知乎问题或内容链接开始     |
+| TASK-042 | Planned     | TASK-040、041     | 把验证结果整理回知乎表达         |
+| TASK-043 | Planned     | TASK-040          | 加入受控多人视角与经验贡献       |
+| TASK-044 | Planned     | TASK-040          | 建立账号、云端会话与隐私中心     |
+| TASK-045 | Planned     | TASK-034、044     | 建立场景编辑与内容运营后台       |
+| TASK-046 | Planned     | TASK-030、044     | 补齐可观测性、可靠性和安全       |
+| TASK-047 | Planned     | TASK-028、037     | 完成体验、无障碍与性能优化       |
+| TASK-048 | Planned     | TASK-044–047      | 公开部署并建立持续验证机制       |
+| TASK-049 | Planned     | TASK-037、040     | 探索有证据边界的未来自我角色     |
+| TASK-050 | Planned     | TASK-033、037     | 探索对立观点议事桌               |
+| TASK-051 | Planned     | TASK-040、044     | 探索个人决策模式回顾             |
 
 下一项：`TASK-027`。开始执行时，从 [`docs/templates/TASK_TEMPLATE.md`](../docs/templates/TASK_TEMPLATE.md) 创建对应任务文件。
