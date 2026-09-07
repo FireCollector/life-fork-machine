@@ -122,6 +122,7 @@ npm run dev
 Next.js App Router
 ├── src/components/experience     页面与交互
 ├── src/features/game              Schema、规则引擎、实验和分享纯函数
+├── src/features/ai                AI 候选、来源校验与失败降级合同
 ├── content/scenarios               场景、三幕行动、结果模板
 ├── content/evidence                知乎来源卡与检索快照
 ├── scripts                         内容校验与知乎快照刷新
