@@ -32,6 +32,7 @@
 - [x] 准备访谈提纲和无讲解测试脚本。
 - [x] 准备脱敏记录模板、证据阈值和分析方法。
 - [x] 完成当前仓库与产品假设基线审计。
+- [x] 完成公开资料二手研究与证据支撑的代理走查（不计入真人样本）。
 - [ ] 完成至少 8 名目标用户访谈。
 - [ ] 完成至少 5 名非项目成员的无讲解测试。
 - [ ] 汇总至少 3 个重复痛点，并保留脱敏原话。
@@ -69,5 +70,7 @@
 - [x] `tasks/README.md`
 - [x] `docs/research/RESEARCH-PLAN.md`
 - [x] `docs/research/BASELINE.md`
+- [x] `docs/research/SECONDARY-RESEARCH.md`
+- [x] `docs/research/PROXY-REVIEW.md`
 - [ ] `docs/research/FINDINGS.md`
 - [x] `verification/TASK-028/report.md`
