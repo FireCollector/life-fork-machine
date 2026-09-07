@@ -1,13 +1,12 @@
 import { NextResponse } from "next/server";
 
 import hackathonConfig from "../../../../hackathon.config.json";
+import { aiGateway } from "@/server/ai";
 
 export const dynamic = "force-dynamic";
 
 export function GET() {
-  const aiProviderReady = Boolean(
-    process.env.AI_PROVIDER && process.env.AI_API_KEY
-  );
+  const ai = aiGateway.status();
 
   return NextResponse.json(
     {
@@ -22,8 +21,14 @@ export function GET() {
         credentialExposure: "server-only"
       },
       fallback: {
-        narration: aiProviderReady ? "ai" : "template",
+        narration: ai.mode === "realtime-ready" ? "ai" : "template",
         evidence: "reviewed-fixture"
+      },
+      ai: {
+        mode: ai.mode,
+        provider: ai.provider,
+        model: ai.model,
+        credentialExposure: "server-only"
       }
     },
     {

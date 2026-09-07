@@ -15,6 +15,10 @@ describe("GET /api/health", () => {
         oauthEnabled: false,
         contentMode: "reviewed-fixture",
         credentialExposure: "server-only"
+      },
+      ai: {
+        mode: "demo-cache",
+        credentialExposure: "server-only"
       }
     });
     expect(serialized).not.toContain("access_secret");

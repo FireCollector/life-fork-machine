@@ -144,6 +144,10 @@ export function TopicLab() {
             <p className="text-muted-foreground mt-2 text-xs leading-5">
               不输出成功率，不替你做决定，不把未经审核的生成内容伪装成知乎事实。
             </p>
+            <p className="text-muted-foreground mt-3 border-t border-white/[0.08] pt-3 text-xs leading-5">
+              当前模式：<span className="text-blue-200">演示缓存</span>。实时 AI
+              网关已准备，但本页会在议题与证据均通过审核后才接入它。
+            </p>
           </div>
         </section>
 

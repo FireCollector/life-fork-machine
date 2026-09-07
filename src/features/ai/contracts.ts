@@ -209,6 +209,8 @@ export const AiCandidateBundleSchema = z
 
 export const AiFailureCodeSchema = z.enum([
   "timeout",
+  "cancelled",
+  "rate-limited",
   "provider-unavailable",
   "invalid-output",
   "insufficient-evidence",
@@ -242,6 +244,7 @@ export const AiGenerationResultSchema = z.discriminatedUnion("provenance", [
 export type AiGenerationRequest = z.infer<typeof AiGenerationRequestSchema>;
 export type AiCandidateBundle = z.infer<typeof AiCandidateBundleSchema>;
 export type AiFailure = z.infer<typeof AiFailureSchema>;
+export type AiFailureCode = z.infer<typeof AiFailureCodeSchema>;
 export type AiGenerationResult = z.infer<typeof AiGenerationResultSchema>;
 
 function collectCitations(bundle: AiCandidateBundle) {
