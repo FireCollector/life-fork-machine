@@ -48,8 +48,8 @@ TASK-027 产品定义
 | Task     | 状态    | 依赖              | 目标结果                         |
 | -------- | ------- | ----------------- | -------------------------------- |
 | TASK-027 | Done    | D01–D26 Demo 基线 | 冻结长期产品定义与成功指标       |
-| TASK-028 | Ready   | TASK-027          | 完成第一轮真实用户研究           |
-| TASK-029 | Planned | TASK-027、028     | 冻结 AI 与规则引擎边界           |
+| TASK-028 | Blocked | TASK-027          | 完成第一轮真实用户研究           |
+| TASK-029 | Done    | TASK-027、028*    | 冻结 AI 与规则引擎边界           |
 | TASK-030 | Planned | TASK-029          | 建立服务端 AI Provider 网关      |
 | TASK-031 | Planned | TASK-030          | 把任意议题整理成可编辑决策简报   |
 | TASK-032 | Planned | TASK-031          | 建立动态知乎证据检索管线         |
@@ -73,4 +73,6 @@ TASK-027 产品定义
 | TASK-050 | Planned | TASK-033、037     | 探索对立观点议事桌               |
 | TASK-051 | Planned | TASK-040、044     | 探索个人决策模式回顾             |
 
-下一项：`TASK-028`。开始执行时，从 [`docs/templates/TASK_TEMPLATE.md`](../docs/templates/TASK_TEMPLATE.md) 创建对应任务文件。
+`*` TASK-028 的预研究输入已完成，但真人研究仍被阻塞；项目负责人已授权 TASK-029 先冻结安全的 AI 合同，后续必须用真人研究修订优先级。
+
+下一任务：`TASK-030`。TASK-028 等待 8 名真实参与者，其中至少 5 名完成无讲解测试；真实结果到来后须复核 TASK-029 的优先级与文案。
