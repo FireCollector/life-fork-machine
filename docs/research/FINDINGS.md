@@ -7,6 +7,7 @@
 
 - 已完成：[`SECONDARY-RESEARCH.md`](SECONDARY-RESEARCH.md) 汇总可追溯的公开来源，并将其转成 H06–H09 待验证假设。
 - 已完成：[`PROXY-REVIEW.md`](PROXY-REVIEW.md) 用五类代理画像走查当前 Demo，给出 P0/P1/P2 风险清单。
+- 已完成：[`TASK-029-INPUT.md`](TASK-029-INPUT.md) 将上述预研究材料整理为 AI 架构的边界输入。
 - 严格边界：二手资料、公开社区内容和多代理走查均不是访谈记录，不能增加下方 P01–P08 的完成数，也不能写成用户原话或正式研究发现。
 
 ## 样本进度
