@@ -172,10 +172,9 @@ GitHub Actions 会在 push 和 pull request 时自动执行 lint、类型检查�
 
 ## 后续路线
 
-1. 把知乎检索、去重、人工审核和场景发布做成服务端流水线。
-2. 为审核通过的议题生成完整 `ScenarioPack`，接入正式三幕引擎。
-3. 在事实边界内增加在线 AI 个性化叙事，并保留确定性规则兜底。
-4. 增加匿名云端会话、协作决策和可撤销的 OAuth 个性化能力。
+后续不再以比赛截止时间为目标，而是逐步把固定 Demo 做成可处理新议题、能真实跟踪实验并支持长期复盘的产品。完整步骤、依赖和验收标准见 [`docs/PRODUCT-ROADMAP.md`](docs/PRODUCT-ROADMAP.md)。
+
+从 `TASK-027` 开始，项目采用一项任务对应一组清晰提交的开发方式。任务状态见 [`tasks/README.md`](tasks/README.md)，分支、提交和验证规则见 [`docs/DEVELOPMENT-WORKFLOW.md`](docs/DEVELOPMENT-WORKFLOW.md)。
 
 ## 许可证
 

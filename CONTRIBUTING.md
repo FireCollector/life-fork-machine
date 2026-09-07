@@ -26,10 +26,32 @@ npm run build
 - 不提交 `.env`、Access Secret、用户账号信息、浏览器缓存和本地生成文件。
 - 面向参赛演示的文案优先使用短句和口语化表达，避免把反思文本写成预测或建议。
 
+## 任务与提交
+
+从 `TASK-027` 开始，开发必须先在 [`tasks/README.md`](tasks/README.md) 领取一个 `Ready` 任务。完整流程见 [`docs/DEVELOPMENT-WORKFLOW.md`](docs/DEVELOPMENT-WORKFLOW.md)。
+
+提交标题格式：
+
+```text
+type(scope): concise result [TASK-XXX]
+```
+
+例如：
+
+```text
+feat(ai): add structured provider response [TASK-030]
+test(ai): cover timeout and schema failures [TASK-030]
+docs(verification): close provider gateway [TASK-030]
+```
+
+一个任务可以有多个小提交，但同一提交不能混入其他任务。
+
 ## Pull Request 自检
 
 - [ ] 说明改动解决的用户问题
 - [ ] 补充或更新测试
 - [ ] 通过 lint、typecheck、unit test 和 build
 - [ ] 若改变演示路径，同步更新 `content/D08-demo-kit.md` 与 `docs/DEMO-RUNBOOK.md`
+- [ ] 标题和所有提交包含同一个 `[TASK-XXX]`
+- [ ] 更新任务文件、任务板与验证报告
 - [ ] 未引入未经审核的外部内容或个人隐私
