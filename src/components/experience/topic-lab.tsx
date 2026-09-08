@@ -9,12 +9,14 @@ import {
   FileCheck2,
   FlaskConical,
   GitFork,
+  LoaderCircle,
   ShieldAlert,
   Sparkles
 } from "lucide-react";
 
 import { PageFrame } from "@/components/experience/page-frame";
 import { DecisionBriefPanel } from "@/components/experience/decision-brief-panel";
+import { EvidenceClustersPanel } from "@/components/experience/evidence-clusters-panel";
 import { Button } from "@/components/ui/button";
 import {
   generateTopicDraft,
@@ -23,15 +25,35 @@ import {
   TOPIC_PRESETS,
   type TopicDraft
 } from "@/features/game";
+import type { EvidenceOrganization, EvidenceSource } from "@/features/evidence";
+
+type SearchResponse = {
+  status: "ready" | "empty" | "unavailable" | "rate-limited";
+  message: string;
+  cached: boolean;
+  items: EvidenceSource[];
+};
+
+type OrganizationFailure = {
+  provenance: "organization-failure";
+  failure: { userMessage: string };
+};
 
 export function TopicLab() {
   const [input, setInput] = useState<string>(TOPIC_PRESETS[0].input);
   const [draft, setDraft] = useState<TopicDraft>(() =>
     generateTopicDraft(TOPIC_PRESETS[0].input)
   );
-  const [brief, setBrief] = useState(() => createDecisionBrief(TOPIC_PRESETS[0].input));
+  const [brief, setBrief] = useState(() =>
+    createDecisionBrief(TOPIC_PRESETS[0].input)
+  );
   const [error, setError] = useState<string>();
   const [saved, setSaved] = useState(false);
+  const [evidence, setEvidence] = useState<SearchResponse>();
+  const [organization, setOrganization] = useState<EvidenceOrganization>();
+  const [evidenceNotice, setEvidenceNotice] = useState<string>();
+  const [isSearching, setIsSearching] = useState(false);
+  const [isOrganizing, setIsOrganizing] = useState(false);
 
   function generate() {
     try {
@@ -39,6 +61,8 @@ export function TopicLab() {
       setBrief(createDecisionBrief(input));
       setError(undefined);
       setSaved(false);
+      setEvidence(undefined);
+      setOrganization(undefined);
     } catch (generationError) {
       setError(
         generationError instanceof Error
@@ -55,6 +79,8 @@ export function TopicLab() {
       setBrief(createDecisionBrief(value));
       setError(undefined);
       setSaved(false);
+      setEvidence(undefined);
+      setOrganization(undefined);
     } catch {
       setError("这个预设暂时无法生成");
     }
@@ -66,6 +92,64 @@ export function TopicLab() {
       JSON.stringify({ draft, brief })
     );
     setSaved(true);
+  }
+
+  async function retrieveEvidence() {
+    if (!brief.confirmed || brief.safety.status === "stop") {
+      setEvidenceNotice("先确认上面的决策简报，才能开始检索。");
+      return;
+    }
+    setIsSearching(true);
+    setEvidenceNotice(undefined);
+    setOrganization(undefined);
+    try {
+      const response = await fetch("/api/evidence/zhihu", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(brief)
+      });
+      const result = (await response.json()) as SearchResponse;
+      setEvidence(result);
+      setEvidenceNotice(result.message);
+    } catch {
+      setEvidenceNotice("知乎检索暂不可用；没有使用旧内容代替这次结果。");
+    } finally {
+      setIsSearching(false);
+    }
+  }
+
+  async function organizeEvidence() {
+    if (!evidence || evidence.status !== "ready" || evidence.items.length < 3) {
+      setEvidenceNotice("至少需要 3 条可追溯来源，才能进行观点整理。");
+      return;
+    }
+    setIsOrganizing(true);
+    setEvidenceNotice(undefined);
+    try {
+      const response = await fetch("/api/evidence/organize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ brief, evidence })
+      });
+      const result = (await response.json()) as
+        EvidenceOrganization | OrganizationFailure;
+      if (
+        "provenance" in result &&
+        result.provenance === "organization-failure"
+      ) {
+        setEvidenceNotice(result.failure.userMessage);
+        return;
+      }
+      if (!response.ok) {
+        setEvidenceNotice("观点整理没有完成；请保留来源并稍后重试。");
+        return;
+      }
+      setOrganization(result as EvidenceOrganization);
+    } catch {
+      setEvidenceNotice("观点整理暂不可用；来源候选仍保留，尚未形成结论。");
+    } finally {
+      setIsOrganizing(false);
+    }
   }
 
   return (
@@ -126,7 +210,7 @@ export function TopicLab() {
           <label className="text-muted-foreground mt-6 block text-xs">
             你真正想想清楚的问题
             <textarea
-              className="mt-2 min-h-28 w-full resize-y rounded-2xl border border-white/[0.1] bg-black/20 px-4 py-3 text-sm text-white outline-none placeholder:text-white/35 focus:border-zhihu/50"
+              className="focus:border-zhihu/50 mt-2 min-h-28 w-full resize-y rounded-2xl border border-white/[0.1] bg-black/20 px-4 py-3 text-sm text-white outline-none placeholder:text-white/35"
               maxLength={120}
               onChange={(event) => setInput(event.target.value)}
               placeholder="例如：我要不要离开大城市回老家？"
@@ -158,7 +242,70 @@ export function TopicLab() {
         </section>
 
         <section aria-labelledby="draft-title" className="space-y-6">
-          <DecisionBriefPanel brief={brief} onChange={setBrief} onConfirm={() => setBrief(confirmDecisionBrief(brief))} />
+          <DecisionBriefPanel
+            brief={brief}
+            onChange={setBrief}
+            onConfirm={() => setBrief(confirmDecisionBrief(brief))}
+          />
+          <section className="glass-panel border-zhihu/20 rounded-3xl border p-5 sm:p-7">
+            <p className="text-xs tracking-[0.16em] text-blue-200 uppercase">
+              Live evidence / 知乎候选
+            </p>
+            <h2 className="mt-2 text-xl font-semibold">
+              先找真实经验，再整理它们到底在说什么。
+            </h2>
+            <p className="text-muted-foreground mt-3 text-sm leading-6">
+              检索结果只是候选来源。整理时会保留每条观点对应的原文入口，不会把“多数人说”变成替你做决定。
+            </p>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <Button
+                disabled={isSearching || brief.safety.status === "stop"}
+                onClick={retrieveEvidence}
+                variant="secondary"
+              >
+                {isSearching ? (
+                  <LoaderCircle aria-hidden="true" className="animate-spin" />
+                ) : (
+                  <FileCheck2 aria-hidden="true" />
+                )}
+                {isSearching ? "正在检索知乎候选" : "获取知乎候选"}
+              </Button>
+              {evidence?.status === "ready" ? (
+                <Button
+                  disabled={isOrganizing || evidence.items.length < 3}
+                  onClick={organizeEvidence}
+                >
+                  {isOrganizing ? (
+                    <LoaderCircle aria-hidden="true" className="animate-spin" />
+                  ) : (
+                    <Sparkles aria-hidden="true" />
+                  )}
+                  {isOrganizing
+                    ? "正在整理观点"
+                    : `整理 ${evidence.items.length} 条来源`}
+                </Button>
+              ) : null}
+            </div>
+            {evidence ? (
+              <p className="mt-4 text-xs text-white/70">
+                本次状态：
+                <span className="text-blue-200">{evidence.status}</span> · 候选{" "}
+                {evidence.items.length} 条
+                {evidence.cached ? " · 使用服务端短时缓存" : ""}
+              </p>
+            ) : null}
+            {evidenceNotice ? (
+              <p className="mt-3 text-xs leading-5 text-white/60" role="status">
+                {evidenceNotice}
+              </p>
+            ) : null}
+          </section>
+          {organization && evidence ? (
+            <EvidenceClustersPanel
+              organization={organization}
+              sources={evidence.items}
+            />
+          ) : null}
           <div className="glass-panel rounded-3xl border border-white/10 p-5 sm:p-7">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
@@ -183,10 +330,15 @@ export function TopicLab() {
                   key={world.id}
                 >
                   <div className="flex items-center gap-2">
-                    <GitFork aria-hidden="true" className="text-blue-300 size-4" />
+                    <GitFork
+                      aria-hidden="true"
+                      className="size-4 text-blue-300"
+                    />
                     <h3 className="text-sm font-medium">{world.name}</h3>
                   </div>
-                  <p className="mt-2 text-xs leading-5 text-white/80">{world.tagline}</p>
+                  <p className="mt-2 text-xs leading-5 text-white/80">
+                    {world.tagline}
+                  </p>
                   <p className="text-muted-foreground mt-3 text-[10px] leading-4">
                     要看：{world.focus}
                   </p>
@@ -202,9 +354,16 @@ export function TopicLab() {
               </p>
               <div className="mt-4 space-y-3">
                 {draft.assumptions.map((assumption, index) => (
-                  <article className="rounded-2xl border border-white/[0.08] p-4" key={assumption.label}>
-                    <p className="text-blue-200 text-[10px] font-mono">0{index + 1}</p>
-                    <h3 className="mt-2 text-sm font-medium">{assumption.label}</h3>
+                  <article
+                    className="rounded-2xl border border-white/[0.08] p-4"
+                    key={assumption.label}
+                  >
+                    <p className="font-mono text-[10px] text-blue-200">
+                      0{index + 1}
+                    </p>
+                    <h3 className="mt-2 text-sm font-medium">
+                      {assumption.label}
+                    </h3>
                     <p className="text-muted-foreground mt-2 text-xs leading-5">
                       核验方式：{assumption.checkQuestion}
                     </p>
@@ -218,13 +377,18 @@ export function TopicLab() {
                 <FlaskConical aria-hidden="true" className="size-4" />
                 七天现实实验
               </p>
-              <h2 className="mt-3 text-xl font-semibold">{draft.experiment.title}</h2>
+              <h2 className="mt-3 text-xl font-semibold">
+                {draft.experiment.title}
+              </h2>
               <p className="text-muted-foreground mt-3 text-xs leading-5">
                 {draft.experiment.question}
               </p>
               <ol className="mt-5 space-y-3">
                 {draft.experiment.steps.map((step, index) => (
-                  <li className="flex gap-3 text-xs leading-5 text-white/80" key={step}>
+                  <li
+                    className="flex gap-3 text-xs leading-5 text-white/80"
+                    key={step}
+                  >
                     <span className="bg-signal-lime/10 text-signal-lime flex size-6 shrink-0 items-center justify-center rounded-full font-mono text-[10px]">
                       {index + 1}
                     </span>
@@ -242,7 +406,8 @@ export function TopicLab() {
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
                 <p className="text-world-leap text-xs font-medium tracking-[0.16em] uppercase">
-                  生成状态：{draft.safety.status === "needs-review" ? "需要审核" : "草稿"}
+                  生成状态：
+                  {draft.safety.status === "needs-review" ? "需要审核" : "草稿"}
                 </p>
                 <p className="text-muted-foreground mt-2 text-xs leading-5">
                   {draft.safety.message}

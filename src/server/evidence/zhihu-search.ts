@@ -6,8 +6,9 @@ import { z } from "zod";
 import { DecisionBriefSchema } from "@/features/decision-brief";
 
 const exec = promisify(execFile);
-const Item = z
+export const ZhihuEvidenceItemSchema = z
   .object({
+    sourceId: z.string().regex(/^zh-[a-z0-9][a-z0-9-]*-\d{2}$/),
     contentId: z.string().min(1),
     title: z.string().min(1),
     url: z.string().url(),
@@ -22,16 +23,25 @@ const Item = z
 export const ZhihuEvidenceResultSchema = z
   .object({
     status: z.enum(["ready", "empty", "unavailable", "rate-limited"]),
-    items: z.array(Item),
+    items: z.array(ZhihuEvidenceItemSchema),
     message: z.string(),
     cached: z.boolean()
   })
   .strict();
 export type ZhihuEvidenceResult = z.infer<typeof ZhihuEvidenceResultSchema>;
+export type ZhihuEvidenceItem = z.infer<typeof ZhihuEvidenceItemSchema>;
 const cache = new Map<
   string,
   { expires: number; result: ZhihuEvidenceResult }
 >();
+
+function sourceIdFor(contentId: string) {
+  let hash = 2166136261;
+  for (const character of contentId) {
+    hash = Math.imul(hash ^ character.charCodeAt(0), 16777619);
+  }
+  return `zh-retrieved-${(hash >>> 0).toString(36)}-01`;
+}
 
 export function deriveZhihuQueries(brief: z.infer<typeof DecisionBriefSchema>) {
   const choiceQuery = `${brief.options.join(" 或 ")} 怎么选`;
@@ -69,7 +79,7 @@ export async function searchZhihuEvidence(
   if (hit && hit.expires > Date.now()) return { ...hit.result, cached: true };
   const cli = getZhihuCliPath();
   const queries = deriveZhihuQueries(brief);
-  const byId = new Map<string, z.infer<typeof Item>>();
+  const byId = new Map<string, ZhihuEvidenceItem>();
 
   try {
     for (const query of queries) {
@@ -100,12 +110,15 @@ export async function searchZhihuEvidence(
           if (!existing.queries.includes(query)) existing.queries.push(query);
           continue;
         }
-        const item = Item.parse({
+        const item = ZhihuEvidenceItemSchema.parse({
+          sourceId: sourceIdFor(id),
           contentId: id,
           title: raw.Title || "未命名内容",
           url: raw.Url,
           author: raw.AuthorName || "知乎用户",
-          excerpt: String(raw.ContentText || "").slice(0, 600),
+          excerpt:
+            String(raw.ContentText || "").slice(0, 600) ||
+            "检索结果未提供可整理摘要。",
           voteUpCount: Number(raw.VoteUpCount || 0),
           rankingScore: Number(raw.RankingScore || 0),
           retrievedAt: new Date().toISOString(),
