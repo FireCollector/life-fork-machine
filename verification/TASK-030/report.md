@@ -25,14 +25,15 @@
 
 ### 当前真实环境探针
 
-- `.env.local` 已确认存在于仓库根目录；健康检查返回 `realtime-ready`，但未显示密钥。
-- 网关探针收到 `provider-unavailable`，诊断为 `provider request failed: TypeError`；未获得 Provider HTTP 响应，因此不计入 20 次成功率样本。
-- 无凭据的连通性检查显示 DNS 可解析、`api.openai.com:443` TCP 不可达。结论：当前阻塞是本机网络/代理/防火墙出站连接，不是候选 Schema 或 API Key 在前端泄露。
+- `.env.local` 已确认存在于仓库根目录；健康检查返回 `realtime-ready`、`provider: deepseek-responses`，但不显示密钥或模型全文。
+- `api.deepseek.com:443` TCP 可达；真实请求已到达 Provider，说明此前的 OpenAI 出站网络问题已被替换为可用的 DeepSeek 通路。
+- 已将网关改为 DeepSeek 官方支持的 Responses API 基础地址，并使用由 Zod 合同导出的 JSON Schema 请求结构化输出；模型密钥未出现在健康检查或候选响应中。
+- 当前一条完整候选探针超过原 15 秒网关等待上限，返回透明 `timeout`；本机 `.env.local` 已将等待上限调至 60 秒以继续观察。受本次命令执行窗口限制，尚未得到可统计的完整响应，因此**不能**计入 20 次成功率样本。
 
 ## 已知边界与后续任务
 
 - 自动测试以模拟 Provider 覆盖成功、缓存、超时、结构错误和无凭据状态；不需要也不会使用真实密钥。
-- 真实 20 次验收需要项目负责人本地提供未提交的有效凭据；在完成前任务维持 Verification。
+- DeepSeek 已具备有效服务端配置和网络通路；仍需在可持续运行的本地或部署环境中完成 20 次真实调用汇总，在完成前任务维持 Verification。
 - `/topic-lab` 仍使用演示缓存；TASK-031 才将可编辑议题简报接入网关。
 
 ## 证据

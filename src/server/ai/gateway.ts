@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { ZodError, toJSONSchema } from "zod";
 
 import {
   AiCandidateBundleSchema,
@@ -12,14 +13,18 @@ import {
 } from "@/features/ai";
 
 const DEFAULT_ENDPOINT = "https://api.openai.com/v1/responses";
+const DEEPSEEK_RESPONSES_ENDPOINT = "https://api.deepseek.com/responses";
 const DEFAULT_TIMEOUT_MS = 15_000;
 const DEFAULT_RATE_LIMIT = 10;
 const DEFAULT_CACHE_TTL_MS = 5 * 60_000;
 const DEFAULT_CACHE_MAX_ENTRIES = 100;
 const PROMPT_VERSION = "task-030.v1";
+const CandidateResponseSchema = toJSONSchema(AiCandidateBundleSchema, {
+  target: "draft-7"
+});
 
 export type AiGatewayConfig = {
-  provider: "openai-responses" | "disabled";
+  provider: "openai-responses" | "deepseek-responses" | "disabled";
   apiKey?: string;
   model?: string;
   endpoint: string;
@@ -33,14 +38,14 @@ export type AiGatewayConfig = {
 
 export type AiGatewayStatus = {
   mode: "realtime-ready" | "demo-cache";
-  provider: "openai-responses" | null;
+  provider: "openai-responses" | "deepseek-responses" | null;
   model: string | null;
 };
 
 export type AiGatewayEvent = {
   requestId: string;
   durationMs: number;
-  provider: "openai-responses" | "disabled";
+  provider: "openai-responses" | "deepseek-responses" | "disabled";
   model: string | null;
   promptVersion: string;
   attempts: number;
@@ -89,6 +94,18 @@ function boundedNumber(
     : fallback;
 }
 
+function responsesEndpoint(provider: AiGatewayConfig["provider"], value?: string) {
+  const configured = value?.trim().replace(/\/$/, "");
+  if (!configured) {
+    return provider === "deepseek-responses"
+      ? DEEPSEEK_RESPONSES_ENDPOINT
+      : DEFAULT_ENDPOINT;
+  }
+  return configured.endsWith("/responses")
+    ? configured
+    : `${configured}/responses`;
+}
+
 export function readAiGatewayConfig(
   env: NodeJS.ProcessEnv = process.env
 ): AiGatewayConfig {
@@ -96,15 +113,19 @@ export function readAiGatewayConfig(
   const apiKey = env.AI_API_KEY?.trim();
   const model = env.AI_MODEL?.trim();
   const provider =
-    requestedProvider === "openai" && apiKey && model
-      ? "openai-responses"
+    (requestedProvider === "openai" || requestedProvider === "deepseek") &&
+    apiKey &&
+    model
+      ? requestedProvider === "deepseek"
+        ? "deepseek-responses"
+        : "openai-responses"
       : "disabled";
 
   return {
     provider,
-    apiKey: provider === "openai-responses" ? apiKey : undefined,
-    model: provider === "openai-responses" ? model : undefined,
-    endpoint: env.AI_BASE_URL?.trim() || DEFAULT_ENDPOINT,
+    apiKey: provider !== "disabled" ? apiKey : undefined,
+    model: provider !== "disabled" ? model : undefined,
+    endpoint: responsesEndpoint(provider, env.AI_BASE_URL),
     timeoutMs: boundedNumber(
       env.AI_TIMEOUT_MS,
       DEFAULT_TIMEOUT_MS,
@@ -135,7 +156,7 @@ export function readAiGatewayConfig(
 }
 
 export function getAiGatewayStatus(config: AiGatewayConfig): AiGatewayStatus {
-  if (config.provider !== "openai-responses" || !config.model) {
+  if (config.provider === "disabled" || !config.model) {
     return { mode: "demo-cache", provider: null, model: null };
   }
 
@@ -244,7 +265,7 @@ function userPrompt(request: AiGenerationRequest) {
   return JSON.stringify({
     request,
     responseRules: [
-      "Return one JSON object only.",
+      "Return one JSON object only. The response must conform to the supplied JSON Schema.",
       "Use only source IDs from request.evidence.",
       "Every externally grounded claim needs citations and uncertainty.",
       "Return review.status as needs-evidence-review, needs-editor-review, or blocked.",
@@ -259,15 +280,48 @@ function extractText(payload: unknown): string | undefined {
   if (!payload || typeof payload !== "object") return undefined;
   const response = payload as {
     output_text?: unknown;
-    output?: Array<{ content?: Array<{ text?: unknown }> }>;
+    output?: Array<{
+      content?: Array<{ type?: unknown; text?: unknown }>;
+    }>;
   };
   if (typeof response.output_text === "string") return response.output_text;
 
-  const text = response.output
-    ?.flatMap((output) => output.content ?? [])
+  const parts = response.output?.flatMap((output) => output.content ?? []) ?? [];
+  const typedText = parts
+    .filter((content) => content.type === "output_text")
     .map((content) => content.text)
     .find((value): value is string => typeof value === "string");
-  return text;
+  if (typedText) return typedText;
+
+  return parts
+    .map((content) => content.text)
+    .find((value): value is string => typeof value === "string");
+}
+
+function outputShape(payload: unknown) {
+  if (!payload || typeof payload !== "object") return "non-object response";
+  const output = (payload as { output?: unknown }).output;
+  if (!Array.isArray(output)) return "no output array";
+  return output
+    .slice(0, 4)
+    .map((item) => {
+      if (!item || typeof item !== "object") return "unknown";
+      const record = item as { type?: unknown; content?: unknown };
+      const itemType = typeof record.type === "string" ? record.type : "unknown";
+      const contentTypes = Array.isArray(record.content)
+        ? record.content
+            .slice(0, 4)
+            .map((content) =>
+              content && typeof content === "object" &&
+              typeof (content as { type?: unknown }).type === "string"
+                ? (content as { type: string }).type
+                : "unknown"
+            )
+            .join(",")
+        : "none";
+      return `${itemType}(${contentTypes})`;
+    })
+    .join(";");
 }
 
 function extractUsage(payload: unknown): TokenUsage | undefined {
@@ -282,6 +336,19 @@ function extractUsage(payload: unknown): TokenUsage | undefined {
   return input === undefined && output === undefined && total === undefined
     ? undefined
     : { input, output, total };
+}
+
+function candidateValidationDiagnostic(error: unknown) {
+  if (error instanceof ZodError) {
+    const paths = error.issues
+      .slice(0, 3)
+      .map((issue) => issue.path.join(".") || "root")
+      .join(", ");
+    return `candidate schema mismatch at ${paths || "root"}`;
+  }
+  return error instanceof Error && error.message.startsWith("AI candidate")
+    ? "candidate cited an unavailable source"
+    : "candidate did not pass contract validation";
 }
 
 function isAbortError(error: unknown) {
@@ -355,7 +422,7 @@ export function createAiGateway({
     signal?: AbortSignal
   ): Promise<{ result: ProviderCallResult; attempts: number }> {
     if (
-      config.provider !== "openai-responses" ||
+      config.provider === "disabled" ||
       !config.apiKey ||
       !config.model
     ) {
@@ -396,13 +463,28 @@ export function createAiGateway({
               },
               { role: "user", content: userPrompt(request) }
             ],
-            text: { format: { type: "json_object" } }
+            max_output_tokens: 3_500,
+            text: {
+              format: {
+                type: "json_schema",
+                name: "reviewable_life_fork_candidate",
+                schema: CandidateResponseSchema
+              }
+            }
           })
         });
-        const payload = (await response
-          .json()
-          .catch(() => undefined)) as unknown;
+        const rawPayload = await response.text();
+        const payload = (() => {
+          try {
+            return JSON.parse(rawPayload) as unknown;
+          } catch {
+            return undefined;
+          }
+        })();
         const tokens = extractUsage(payload);
+        const responseShape = payload
+          ? outputShape(payload)
+          : `non-JSON HTTP ${response.status} (${response.headers.get("content-type") ?? "no content type"})`;
 
         if (!response.ok) {
           if (response.status === 429) {
@@ -445,7 +527,9 @@ export function createAiGateway({
           return {
             result: {
               kind: "failure",
-              failure: createFailure("invalid-output"),
+              failure: createFailure("invalid-output", {
+                diagnostic: `provider response had no usable output text: ${responseShape}`
+              }),
               tokens
             },
             attempts: attempt + 1
@@ -470,11 +554,13 @@ export function createAiGateway({
             result: { kind: "success", candidate, tokens },
             attempts: attempt + 1
           };
-        } catch {
+        } catch (error) {
           return {
             result: {
               kind: "failure",
-              failure: createFailure("invalid-output"),
+              failure: createFailure("invalid-output", {
+                diagnostic: candidateValidationDiagnostic(error)
+              }),
               tokens
             },
             attempts: attempt + 1

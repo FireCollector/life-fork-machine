@@ -7,7 +7,7 @@
 
 `src/server/ai/gateway.ts` 是模型调用唯一入口。浏览器只会请求 `POST /api/ai/candidate`；`AI_API_KEY` 只在 Node.js 服务端读取，不会进入浏览器包、健康检查或运行日志。
 
-当前提供 OpenAI Responses 兼容实现。它将一个 `AiGenerationRequest` 发送给配置的端点，要求 JSON 对象输出，再用 TASK-029 的 Zod 合同、来源白名单和人工审核状态校验结果。Provider 可在后续通过相同网关接口替换，不需要让页面直接接触密钥或模型响应。
+当前提供 OpenAI 与 DeepSeek 的 Responses API 接入。它将一个 `AiGenerationRequest` 发送给配置的端点，并下发由 Zod 合同生成的 JSON Schema；返回内容仍会经过 Zod 合同、来源白名单和人工审核状态校验。两层校验避免了“看起来是 JSON、实际上字段缺失”的候选混入体验。Provider 可在后续通过相同网关接口替换，不需要让页面直接接触密钥或模型响应。
 
 实现参考 [OpenAI Structured Outputs 指南](https://platform.openai.com/docs/guides/structured-outputs) 与 [Responses API 文档](https://platform.openai.com/docs/api-reference/responses)。本机访问官方页面时受到网络侧 Cloudflare 限制；实际接入仍以官方最新文档和账户可用模型为准。
 
@@ -17,15 +17,16 @@
 2. 只在 `.env.local` 写入下列值；不要使用 `NEXT_PUBLIC_` 前缀，也不要贴到聊天、提交或截图里。
 
 ```dotenv
-AI_PROVIDER=openai
-AI_API_KEY=你的服务端密钥
-AI_MODEL=你账户可用的模型标识
+AI_PROVIDER=deepseek
+AI_API_KEY=你的 DeepSeek 服务端密钥
+AI_MODEL=deepseek-v4-flash
+AI_BASE_URL=https://api.deepseek.com
 ```
 
 3. 重启 `npm run dev`，访问 `/api/health`。
 4. 当 `ai.mode` 是 `realtime-ready` 时，网关可以接受请求；是 `demo-cache` 时，应用会保留确定性 Demo，不发送 Provider 请求。
 
-可选参数见 `.env.example`：超时 15 秒、最多 1 次重试、每调用方每分钟 10 次、缓存 5 分钟且最多 100 条。`AI_BASE_URL` 默认为 OpenAI Responses 端点，仅用于服务端。
+可选参数见 `.env.example`：超时 15 秒、最多 1 次重试、每调用方每分钟 10 次、缓存 5 分钟且最多 100 条。`AI_BASE_URL` 填 Provider 基础地址即可；服务端会附加 `/responses`，仅用于服务端。DeepSeek 官方文档确认其支持 OpenAI 兼容的 Responses API，基础地址为 `https://api.deepseek.com`，请以账户实际可用模型为准。[DeepSeek Responses API 文档](https://api-docs.deepseek.com/guides/responses_api/)
 
 ## API
 
@@ -90,6 +91,6 @@ HTTP 状态：429 为本地或 Provider 限流，503 为未配置/不可用 Prov
 
 ## 连通性排障
 
-如果健康检查已经是 `realtime-ready`，但候选接口持续返回 `provider-unavailable` 且诊断为 `provider request failed: TypeError`，说明请求没有得到 Provider 的 HTTP 响应。先在运行 Next.js 的机器上确认对 `api.openai.com:443` 的 HTTPS 出站连接；DNS 能解析但 TCP 连接失败通常是网络、防火墙或代理策略问题，不是 Zod Schema 或模型输出问题。
+如果健康检查已经是 `realtime-ready`，但候选接口持续返回 `provider-unavailable` 且诊断为 `provider request failed: TypeError`，说明请求没有得到 Provider 的 HTTP 响应。先在运行 Next.js 的机器上确认对当前 `AI_BASE_URL` 域名的 HTTPS 出站连接；DNS 能解析但 TCP 连接失败通常是网络、防火墙或代理策略问题，不是 Zod Schema 或模型输出问题。
 
 请在合法合规的网络出口、组织批准的代理/网关或已允许出站访问的部署环境中运行服务。不要通过把 Key 放到浏览器、源码、公共代理或 GitHub Issue 来绕过此限制；网络恢复后再从“真实凭据验收脚本”重新开始统计 20 次调用。

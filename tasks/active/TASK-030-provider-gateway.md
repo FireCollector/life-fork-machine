@@ -26,8 +26,8 @@ TASK-029 已冻结“AI 只生成待审核候选”的边界。没有一个统�
 
 ## 工作清单
 
-- [x] 建立服务端 OpenAI Responses 兼容网关，密钥不进入客户端。
-- [x] 支持 JSON 对象响应、Zod/来源校验、15 秒超时、一次有限重试和取消请求。
+- [x] 建立服务端 OpenAI / DeepSeek Responses 兼容网关，密钥不进入客户端。
+- [x] 支持由 Zod 合同导出的 JSON Schema、来源校验、可配置超时、一次有限重试和取消请求。
 - [x] 记录无敏感原文的事件；提供 request ID、耗时、模型、Prompt 版本、Token 用量和失败类型。
 - [x] 加入 SHA-256 缓存、调用方哈希限流和缓存大小上限。
 - [x] 提供透明 `demo-cache` / `realtime-ready` 状态和无凭据降级。

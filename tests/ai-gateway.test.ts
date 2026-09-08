@@ -195,6 +195,15 @@ describe("TASK-030 server AI gateway", () => {
         Authorization: "Bearer test-secret-never-log"
       })
     });
+    expect(JSON.parse(String(lastInit?.body))).toMatchObject({
+      max_output_tokens: 3500,
+      text: {
+        format: {
+          type: "json_schema",
+          name: "reviewable_life_fork_candidate"
+        }
+      }
+    });
     expect(JSON.stringify(events)).not.toContain("test-secret-never-log");
     expect(JSON.stringify(events)).not.toContain("稳定高薪");
     expect(events).toEqual([
@@ -261,7 +270,8 @@ describe("TASK-030 server AI gateway", () => {
     const result = await gateway.generate(request());
     expect(result).toMatchObject({
       provenance: "ai-failure",
-      code: "invalid-output"
+      code: "invalid-output",
+      diagnostic: "candidate did not pass contract validation"
     });
   });
 
@@ -295,5 +305,20 @@ describe("TASK-030 server AI gateway", () => {
         AI_PROVIDER: "openai"
       } as unknown as NodeJS.ProcessEnv).provider
     ).toBe("disabled");
+  });
+
+  it("maps a DeepSeek base URL to its Responses endpoint", () => {
+    const parsed = readAiGatewayConfig({
+      AI_PROVIDER: "deepseek",
+      AI_API_KEY: "test-secret-never-log",
+      AI_MODEL: "deepseek-v4-flash",
+      AI_BASE_URL: "https://api.deepseek.com"
+    } as unknown as NodeJS.ProcessEnv);
+
+    expect(parsed).toMatchObject({
+      provider: "deepseek-responses",
+      endpoint: "https://api.deepseek.com/responses",
+      model: "deepseek-v4-flash"
+    });
   });
 });
