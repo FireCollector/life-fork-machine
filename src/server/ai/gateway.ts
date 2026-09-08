@@ -338,7 +338,7 @@ function extractUsage(payload: unknown): TokenUsage | undefined {
     : { input, output, total };
 }
 
-function candidateValidationDiagnostic(error: unknown) {
+function candidateValidationDiagnostic(error: unknown, text: string) {
   if (error instanceof ZodError) {
     const paths = error.issues
       .slice(0, 3)
@@ -346,9 +346,58 @@ function candidateValidationDiagnostic(error: unknown) {
       .join(", ");
     return `candidate schema mismatch at ${paths || "root"}`;
   }
+  if (error instanceof SyntaxError) {
+    const firstCodePoint = text.trim().codePointAt(0) ?? 0;
+    return `provider output was not parseable JSON (length ${text.length}; first code point ${firstCodePoint})`;
+  }
   return error instanceof Error && error.message.startsWith("AI candidate")
     ? "candidate cited an unavailable source"
     : "candidate did not pass contract validation";
+}
+
+function parseCandidateJson(text: string) {
+  const trimmed = text.trim();
+  const unfenced = trimmed.startsWith("```")
+    ? trimmed
+        .replace(/^```(?:json)?\s*/i, "")
+        .replace(/\s*```$/, "")
+        .trim()
+    : trimmed;
+  try {
+    return JSON.parse(unfenced) as unknown;
+  } catch (directError) {
+    for (
+      let start = unfenced.indexOf("{");
+      start >= 0;
+      start = unfenced.indexOf("{", start + 1)
+    ) {
+      let depth = 0;
+      let quoted = false;
+      let escaped = false;
+      for (let cursor = start; cursor < unfenced.length; cursor += 1) {
+        const character = unfenced[cursor];
+        if (quoted) {
+          if (escaped) escaped = false;
+          else if (character === "\\") escaped = true;
+          else if (character === '"') quoted = false;
+          continue;
+        }
+        if (character === '"') quoted = true;
+        else if (character === "{") depth += 1;
+        else if (character === "}") {
+          depth -= 1;
+          if (depth === 0) {
+            try {
+              return JSON.parse(unfenced.slice(start, cursor + 1)) as unknown;
+            } catch {
+              break;
+            }
+          }
+        }
+      }
+    }
+    throw directError;
+  }
 }
 
 function isAbortError(error: unknown) {
@@ -459,10 +508,12 @@ export function createAiGateway({
               {
                 role: "system",
                 content:
-                  "You generate reviewable decision candidates. Follow the supplied JSON rules exactly."
+                  "You are a JSON serialization endpoint for reviewable decision candidates. Never return analysis, reasoning, Markdown, or prose. Your entire visible response must begin with { and end with }. Follow the supplied JSON Schema exactly."
               },
               { role: "user", content: userPrompt(request) }
             ],
+            reasoning: { effort: "none" },
+            temperature: 0,
             max_output_tokens: 3_500,
             text: {
               format: {
@@ -538,7 +589,7 @@ export function createAiGateway({
 
         try {
           const parsed = parseAiCandidateBundle(
-            JSON.parse(text),
+            parseCandidateJson(text),
             request.evidence.map((source) => source.id)
           );
           const candidate = AiCandidateBundleSchema.parse({
@@ -559,7 +610,7 @@ export function createAiGateway({
             result: {
               kind: "failure",
               failure: createFailure("invalid-output", {
-                diagnostic: candidateValidationDiagnostic(error)
+                diagnostic: candidateValidationDiagnostic(error, text)
               }),
               tokens
             },

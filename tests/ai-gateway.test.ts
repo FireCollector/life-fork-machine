@@ -196,6 +196,8 @@ describe("TASK-030 server AI gateway", () => {
       })
     });
     expect(JSON.parse(String(lastInit?.body))).toMatchObject({
+      reasoning: { effort: "none" },
+      temperature: 0,
       max_output_tokens: 3500,
       text: {
         format: {
@@ -271,7 +273,28 @@ describe("TASK-030 server AI gateway", () => {
     expect(result).toMatchObject({
       provenance: "ai-failure",
       code: "invalid-output",
-      diagnostic: "candidate did not pass contract validation"
+      diagnostic: expect.stringContaining("provider output was not parseable JSON")
+    });
+  });
+
+  it("recovers one embedded JSON object before applying the candidate contract", async () => {
+    const fetchImpl = vi.fn(
+      async () =>
+        new Response(
+          JSON.stringify({
+            output_text: `Model preamble.\n${JSON.stringify(candidate())}`
+          }),
+          { status: 200 }
+        )
+    ) as unknown as typeof fetch;
+    const gateway = createAiGateway({
+      config: config(),
+      fetchImpl,
+      eventSink: () => undefined
+    });
+
+    await expect(gateway.generate(request())).resolves.toMatchObject({
+      provenance: "ai-generated-candidate"
     });
   });
 

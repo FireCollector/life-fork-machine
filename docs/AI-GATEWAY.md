@@ -7,7 +7,7 @@
 
 `src/server/ai/gateway.ts` 是模型调用唯一入口。浏览器只会请求 `POST /api/ai/candidate`；`AI_API_KEY` 只在 Node.js 服务端读取，不会进入浏览器包、健康检查或运行日志。
 
-当前提供 OpenAI 与 DeepSeek 的 Responses API 接入。它将一个 `AiGenerationRequest` 发送给配置的端点，并下发由 Zod 合同生成的 JSON Schema；返回内容仍会经过 Zod 合同、来源白名单和人工审核状态校验。两层校验避免了“看起来是 JSON、实际上字段缺失”的候选混入体验。Provider 可在后续通过相同网关接口替换，不需要让页面直接接触密钥或模型响应。
+当前提供 OpenAI 与 DeepSeek 的 Responses API 接入。它将一个 `AiGenerationRequest` 发送给配置的端点，并下发由 Zod 合同生成的 JSON Schema；DeepSeek 调用会关闭思考模式，避免推理文本干扰严格 JSON 候选。返回内容仍会经过 Zod 合同、来源白名单和人工审核状态校验。两层校验避免了“看起来是 JSON、实际上字段缺失”的候选混入体验。Provider 可在后续通过相同网关接口替换，不需要让页面直接接触密钥或模型响应。
 
 实现参考 [OpenAI Structured Outputs 指南](https://platform.openai.com/docs/guides/structured-outputs) 与 [Responses API 文档](https://platform.openai.com/docs/api-reference/responses)。本机访问官方页面时受到网络侧 Cloudflare 限制；实际接入仍以官方最新文档和账户可用模型为准。
 
