@@ -9,3 +9,4 @@ export * from "./schema";
 export * from "./share-card";
 export * from "./storage";
 export * from "./topic-draft";
+export * from "../decision-brief";

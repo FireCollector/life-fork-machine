@@ -14,9 +14,12 @@ import {
 } from "lucide-react";
 
 import { PageFrame } from "@/components/experience/page-frame";
+import { DecisionBriefPanel } from "@/components/experience/decision-brief-panel";
 import { Button } from "@/components/ui/button";
 import {
   generateTopicDraft,
+  confirmDecisionBrief,
+  createDecisionBrief,
   TOPIC_PRESETS,
   type TopicDraft
 } from "@/features/game";
@@ -26,12 +29,14 @@ export function TopicLab() {
   const [draft, setDraft] = useState<TopicDraft>(() =>
     generateTopicDraft(TOPIC_PRESETS[0].input)
   );
+  const [brief, setBrief] = useState(() => createDecisionBrief(TOPIC_PRESETS[0].input));
   const [error, setError] = useState<string>();
   const [saved, setSaved] = useState(false);
 
   function generate() {
     try {
       setDraft(generateTopicDraft(input));
+      setBrief(createDecisionBrief(input));
       setError(undefined);
       setSaved(false);
     } catch (generationError) {
@@ -47,6 +52,7 @@ export function TopicLab() {
     setInput(value);
     try {
       setDraft(generateTopicDraft(value));
+      setBrief(createDecisionBrief(value));
       setError(undefined);
       setSaved(false);
     } catch {
@@ -57,7 +63,7 @@ export function TopicLab() {
   function saveDraft() {
     window.localStorage.setItem(
       "life-fork-machine:topic-draft:v1",
-      JSON.stringify(draft)
+      JSON.stringify({ draft, brief })
     );
     setSaved(true);
   }
@@ -152,6 +158,7 @@ export function TopicLab() {
         </section>
 
         <section aria-labelledby="draft-title" className="space-y-6">
+          <DecisionBriefPanel brief={brief} onChange={setBrief} onConfirm={() => setBrief(confirmDecisionBrief(brief))} />
           <div className="glass-panel rounded-3xl border border-white/10 p-5 sm:p-7">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
