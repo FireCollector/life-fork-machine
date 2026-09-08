@@ -132,6 +132,8 @@ Next.js App Router
 
 AI 网关的服务端配置、缓存、日志边界与本地验收方式见 [`docs/AI-GATEWAY.md`](docs/AI-GATEWAY.md)。未配置凭据时，应用会明确使用演示缓存，固定 Demo 仍可完整运行。
 
+任意议题生成的决策简报可通过 [`docs/ZHIHU-EVIDENCE-PIPELINE.md`](docs/ZHIHU-EVIDENCE-PIPELINE.md) 请求知乎候选经验；它只返回待审核的来源卡，不会把社区观点当成系统结论。
+
 核心原则：
 
 1. 内容和引擎分离。替换场景包即可扩展到“读研还是工作”等议题。
