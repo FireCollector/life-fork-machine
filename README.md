@@ -136,6 +136,8 @@ AI 网关的服务端配置、缓存、日志边界与本地验收方式见 [`do
 
 在 `/topic-lab` 确认简报后，可以直接获取知乎候选并整理为“共同提醒、保留分歧、适用边界”三类观点簇。每条观点均保留原文回链，审核者可修改条件和风险并留下记录；完整边界见 [`docs/EVIDENCE-ORGANIZATION.md`](docs/EVIDENCE-ORGANIZATION.md)。
 
+完成证据整理后还可生成一个三世界、三幕、带预算与来源的候选剧本。它始终是待编辑审核的草稿，不能替换正式 Demo 或直接发布；约束见 [`docs/CANDIDATE-SCENARIO-PACK.md`](docs/CANDIDATE-SCENARIO-PACK.md)。
+
 核心原则：
 
 1. 内容和引擎分离。替换场景包即可扩展到“读研还是工作”等议题。

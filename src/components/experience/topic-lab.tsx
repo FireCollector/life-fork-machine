@@ -17,6 +17,7 @@ import {
 import { PageFrame } from "@/components/experience/page-frame";
 import { DecisionBriefPanel } from "@/components/experience/decision-brief-panel";
 import { EvidenceClustersPanel } from "@/components/experience/evidence-clusters-panel";
+import { CandidateScenarioPanel } from "@/components/experience/candidate-scenario-panel";
 import { Button } from "@/components/ui/button";
 import {
   generateTopicDraft,
@@ -26,6 +27,7 @@ import {
   type TopicDraft
 } from "@/features/game";
 import type { EvidenceOrganization, EvidenceSource } from "@/features/evidence";
+import type { CandidateScenarioPack } from "@/features/scenario-candidate";
 
 type SearchResponse = {
   status: "ready" | "empty" | "unavailable" | "rate-limited";
@@ -37,6 +39,17 @@ type SearchResponse = {
 type OrganizationFailure = {
   provenance: "organization-failure";
   failure: { userMessage: string };
+};
+
+type ScenarioResponse = {
+  pack: CandidateScenarioPack;
+  validation: {
+    valid: boolean;
+    sourceCount: number;
+    actCount: number;
+    actionCount: number;
+  };
+  notice: string;
 };
 
 export function TopicLab() {
@@ -54,6 +67,10 @@ export function TopicLab() {
   const [evidenceNotice, setEvidenceNotice] = useState<string>();
   const [isSearching, setIsSearching] = useState(false);
   const [isOrganizing, setIsOrganizing] = useState(false);
+  const [candidateScenario, setCandidateScenario] =
+    useState<ScenarioResponse>();
+  const [isBuildingScenario, setIsBuildingScenario] = useState(false);
+  const [scenarioNotice, setScenarioNotice] = useState<string>();
 
   function generate() {
     try {
@@ -63,6 +80,7 @@ export function TopicLab() {
       setSaved(false);
       setEvidence(undefined);
       setOrganization(undefined);
+      setCandidateScenario(undefined);
     } catch (generationError) {
       setError(
         generationError instanceof Error
@@ -81,6 +99,7 @@ export function TopicLab() {
       setSaved(false);
       setEvidence(undefined);
       setOrganization(undefined);
+      setCandidateScenario(undefined);
     } catch {
       setError("这个预设暂时无法生成");
     }
@@ -145,10 +164,43 @@ export function TopicLab() {
         return;
       }
       setOrganization(result as EvidenceOrganization);
+      setCandidateScenario(undefined);
     } catch {
       setEvidenceNotice("观点整理暂不可用；来源候选仍保留，尚未形成结论。");
     } finally {
       setIsOrganizing(false);
+    }
+  }
+
+  async function buildCandidateScenario() {
+    if (!evidence || evidence.status !== "ready" || evidence.items.length < 3) {
+      setScenarioNotice("至少需要 3 条可追溯来源，才能生成候选场景。");
+      return;
+    }
+    setIsBuildingScenario(true);
+    setScenarioNotice(undefined);
+    try {
+      const response = await fetch("/api/scenarios/candidate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ brief, evidence })
+      });
+      const result = (await response.json()) as
+        ScenarioResponse | { message?: string };
+      if (!response.ok || !("pack" in result)) {
+        setScenarioNotice(
+          "message" in result
+            ? (result.message ?? "候选场景没有生成。")
+            : "候选场景没有生成。"
+        );
+        return;
+      }
+      setCandidateScenario(result);
+      setScenarioNotice(result.notice);
+    } catch {
+      setScenarioNotice("候选场景暂不可用；没有写入任何正式剧本。");
+    } finally {
+      setIsBuildingScenario(false);
     }
   }
 
@@ -304,6 +356,46 @@ export function TopicLab() {
             <EvidenceClustersPanel
               organization={organization}
               sources={evidence.items}
+            />
+          ) : null}
+          {organization && evidence?.status === "ready" ? (
+            <section className="glass-panel border-world-bridge/20 rounded-3xl border p-5 sm:p-7">
+              <p className="text-world-bridge text-xs tracking-[0.16em] uppercase">
+                Candidate scenario / 待审核剧本
+              </p>
+              <h2 className="mt-2 text-xl font-semibold">
+                把证据和分歧，先编译成三条可审核的路。
+              </h2>
+              <p className="text-muted-foreground mt-3 text-sm leading-6">
+                生成的是草稿，不会改变现有
+                Demo，也不能绕过来源、数值和人工发布门禁。
+              </p>
+              <Button
+                className="mt-5"
+                disabled={isBuildingScenario}
+                onClick={buildCandidateScenario}
+              >
+                {isBuildingScenario ? (
+                  <LoaderCircle aria-hidden="true" className="animate-spin" />
+                ) : (
+                  <GitFork aria-hidden="true" />
+                )}
+                {isBuildingScenario ? "正在生成候选场景" : "生成候选三幕"}
+              </Button>
+              {scenarioNotice ? (
+                <p
+                  className="mt-3 text-xs leading-5 text-white/60"
+                  role="status"
+                >
+                  {scenarioNotice}
+                </p>
+              ) : null}
+            </section>
+          ) : null}
+          {candidateScenario ? (
+            <CandidateScenarioPanel
+              pack={candidateScenario.pack}
+              validation={candidateScenario.validation}
             />
           ) : null}
           <div className="glass-panel rounded-3xl border border-white/10 p-5 sm:p-7">
