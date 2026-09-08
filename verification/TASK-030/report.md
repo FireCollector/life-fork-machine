@@ -23,6 +23,12 @@
 - [ ] 有效凭据：20 次真实调用中结构化候选成功率 ≥ 95%。
 - [ ] 已检查事件日志不含 API Key、题目原文或 IP 原文。
 
+### 当前真实环境探针
+
+- `.env.local` 已确认存在于仓库根目录；健康检查返回 `realtime-ready`，但未显示密钥。
+- 网关探针收到 `provider-unavailable`，诊断为 `provider request failed: TypeError`；未获得 Provider HTTP 响应，因此不计入 20 次成功率样本。
+- 无凭据的连通性检查显示 DNS 可解析、`api.openai.com:443` TCP 不可达。结论：当前阻塞是本机网络/代理/防火墙出站连接，不是候选 Schema 或 API Key 在前端泄露。
+
 ## 已知边界与后续任务
 
 - 自动测试以模拟 Provider 覆盖成功、缓存、超时、结构错误和无凭据状态；不需要也不会使用真实密钥。

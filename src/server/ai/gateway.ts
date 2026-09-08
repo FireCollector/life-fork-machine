@@ -429,7 +429,9 @@ export function createAiGateway({
             return {
               result: {
                 kind: "failure",
-                failure: createFailure("provider-unavailable"),
+                failure: createFailure("provider-unavailable", {
+                  diagnostic: `provider returned HTTP ${response.status}`
+                }),
                 tokens
               },
               attempts: attempt + 1
@@ -492,10 +494,14 @@ export function createAiGateway({
           };
         }
         if (attempt === config.maxRetries) {
+          const errorName =
+            error instanceof Error ? error.name : "UnknownError";
           return {
             result: {
               kind: "failure",
-              failure: createFailure("provider-unavailable")
+              failure: createFailure("provider-unavailable", {
+                diagnostic: `provider request failed: ${errorName}`
+              })
             },
             attempts: attempt + 1
           };

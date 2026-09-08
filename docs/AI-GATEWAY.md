@@ -87,3 +87,9 @@ HTTP 状态：429 为本地或 Provider 限流，503 为未配置/不可用 Prov
 - 禁用 `AI_API_KEY` 后，`/api/health` 是否回到 `demo-cache`，并且固定 Demo 仍可完成。
 
 把仅含汇总数字的结果补充到 `verification/TASK-030/report.md`，不要提交请求正文或凭据。
+
+## 连通性排障
+
+如果健康检查已经是 `realtime-ready`，但候选接口持续返回 `provider-unavailable` 且诊断为 `provider request failed: TypeError`，说明请求没有得到 Provider 的 HTTP 响应。先在运行 Next.js 的机器上确认对 `api.openai.com:443` 的 HTTPS 出站连接；DNS 能解析但 TCP 连接失败通常是网络、防火墙或代理策略问题，不是 Zod Schema 或模型输出问题。
+
+请在合法合规的网络出口、组织批准的代理/网关或已允许出站访问的部署环境中运行服务。不要通过把 Key 放到浏览器、源码、公共代理或 GitHub Issue 来绕过此限制；网络恢复后再从“真实凭据验收脚本”重新开始统计 20 次调用。
