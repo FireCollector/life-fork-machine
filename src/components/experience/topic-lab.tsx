@@ -18,6 +18,7 @@ import { PageFrame } from "@/components/experience/page-frame";
 import { DecisionBriefPanel } from "@/components/experience/decision-brief-panel";
 import { EvidenceClustersPanel } from "@/components/experience/evidence-clusters-panel";
 import { CandidateScenarioPanel } from "@/components/experience/candidate-scenario-panel";
+import { DynamicNarrativePanel } from "@/components/experience/dynamic-narrative-panel";
 import { Button } from "@/components/ui/button";
 import {
   generateTopicDraft,
@@ -393,10 +394,19 @@ export function TopicLab() {
             </section>
           ) : null}
           {candidateScenario ? (
-            <CandidateScenarioPanel
-              pack={candidateScenario.pack}
-              validation={candidateScenario.validation}
-            />
+            <>
+              <CandidateScenarioPanel
+                pack={candidateScenario.pack}
+                validation={candidateScenario.validation}
+              />
+              {evidence?.status === "ready" ? (
+                <DynamicNarrativePanel
+                  brief={brief}
+                  pack={candidateScenario.pack}
+                  sources={evidence.items}
+                />
+              ) : null}
+            </>
           ) : null}
           <div className="glass-panel rounded-3xl border border-white/10 p-5 sm:p-7">
             <div className="flex flex-wrap items-start justify-between gap-4">
