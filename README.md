@@ -91,6 +91,7 @@ npm run dev
 | `/play/[sessionId]`   | 三幕推演                     |
 | `/result/[sessionId]` | 代价报告与七天实验           |
 | `/api/health`         | 应用健康检查                 |
+| `/api/ai/candidate`   | 服务端 AI 候选网关（需凭据） |
 
 固定 Demo 的逐步点击路线见 [`content/D08-demo-kit.md`](content/D08-demo-kit.md)。
 
@@ -122,11 +123,14 @@ npm run dev
 Next.js App Router
 ├── src/components/experience     页面与交互
 ├── src/features/game              Schema、规则引擎、实验和分享纯函数
+├── src/features/ai                AI 候选、来源校验与失败降级合同
 ├── content/scenarios               场景、三幕行动、结果模板
 ├── content/evidence                知乎来源卡与检索快照
 ├── scripts                         内容校验与知乎快照刷新
 └── tests + e2e                     单元、组件和浏览器验收
 ```
+
+AI 网关的服务端配置、缓存、日志边界与本地验收方式见 [`docs/AI-GATEWAY.md`](docs/AI-GATEWAY.md)。未配置凭据时，应用会明确使用演示缓存，固定 Demo 仍可完整运行。
 
 核心原则：
 

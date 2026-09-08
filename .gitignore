@@ -13,6 +13,8 @@ test-results/
 # Local browser and generated evidence artifacts
 playwright/.cache/
 content/evidence/*-local.json
+verification/TASK-030/deepseek-*.json
+verification/TASK-030/deepseek-*.txt
 
 .env
 .env.*
