@@ -15,6 +15,9 @@ playwright/.cache/
 content/evidence/*-local.json
 verification/TASK-030/deepseek-*.json
 verification/TASK-030/deepseek-*.txt
+eval/hidden.local.json
+verification/TASK-036/*.local.json
+verification/task36-*.local.json
 
 .env
 .env.*

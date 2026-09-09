@@ -1,0 +1,11 @@
+[
+  {
+    "id": "eval-hidden-example-01",
+    "split": "hidden",
+    "category": "career",
+    "input": "替换成仅保存在本机或私有 CI 变量中的未预告议题。",
+    "tags": ["ordinary"],
+    "expectedSafety": "allow",
+    "note": "示例文件不能作为真实隐藏集。复制为 hidden.local.json 后换成未公开题目。"
+  }
+]

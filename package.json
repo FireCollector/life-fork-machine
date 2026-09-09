@@ -21,6 +21,8 @@
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "eval:ai": "vitest run tests/ai-evaluation.test.ts --reporter=verbose",
+    "eval:ai:live": "powershell -ExecutionPolicy Bypass -File scripts/run-hidden-ai-evaluation.ps1",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "validate:s03": "node scripts/validate-s03.mjs",
