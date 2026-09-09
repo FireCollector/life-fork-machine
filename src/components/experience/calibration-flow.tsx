@@ -180,7 +180,11 @@ const dimensionLabels: Record<keyof StateDelta, string> = {
   valueAlignment: "符合内心"
 };
 
-export function CalibrationFlow() {
+export function CalibrationFlow({
+  scenarioId = "startup"
+}: {
+  scenarioId?: string;
+}) {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const savedAnswers = useStoredCalibration();
@@ -210,7 +214,11 @@ export function CalibrationFlow() {
   function sendToForge() {
     const complete = CalibrationAnswersSchema.parse(answers);
     saveCalibration(window.localStorage, complete);
-    router.push("/forge");
+    router.push(
+      scenarioId === "startup"
+        ? "/forge"
+        : `/forge?scenario=${encodeURIComponent(scenarioId)}`
+    );
   }
 
   const Icon = question.icon;

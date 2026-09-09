@@ -9,7 +9,12 @@ import {
   DEMO_CREATED_AT,
   DEMO_ROUTE,
   DEMO_SEED,
-  DEMO_SESSION_ID
+  DEMO_SESSION_ID,
+  GRADUATE_DEMO_CALIBRATION,
+  GRADUATE_DEMO_CREATED_AT,
+  GRADUATE_DEMO_ROUTE,
+  GRADUATE_DEMO_SEED,
+  GRADUATE_DEMO_SESSION_ID
 } from "@/features/game/demo-route";
 import {
   createSession,
@@ -19,24 +24,46 @@ import {
   type Scenario
 } from "@/features/game";
 
+const demoPresets = {
+  startup: {
+    calibration: DEMO_CALIBRATION,
+    createdAt: DEMO_CREATED_AT,
+    route: DEMO_ROUTE,
+    seed: DEMO_SEED,
+    sessionId: DEMO_SESSION_ID,
+    label: "搭桥试水"
+  },
+  "graduate-school": {
+    calibration: GRADUATE_DEMO_CALIBRATION,
+    createdAt: GRADUATE_DEMO_CREATED_AT,
+    route: GRADUATE_DEMO_ROUTE,
+    seed: GRADUATE_DEMO_SEED,
+    sessionId: GRADUATE_DEMO_SESSION_ID,
+    label: "在职验证"
+  }
+} as const;
+
 export function DemoLauncher({ scenario }: { scenario: Scenario }) {
   const router = useRouter();
+  const preset =
+    demoPresets[scenario.scenarioId as keyof typeof demoPresets] ??
+    demoPresets.startup;
 
   useEffect(() => {
-    saveCalibration(window.localStorage, DEMO_CALIBRATION);
+    saveCalibration(window.localStorage, preset.calibration);
     const session = selectWorld(
-      createSession(DEMO_CALIBRATION, scenario, {
-        id: DEMO_SESSION_ID,
-        seed: DEMO_SEED,
-        now: DEMO_CREATED_AT
+      createSession(preset.calibration, scenario, {
+        id: preset.sessionId,
+        seed: preset.seed,
+        now: preset.createdAt
       }),
       scenario,
-      DEMO_ROUTE.worldId,
-      DEMO_CREATED_AT
+      preset.route.worldId,
+      preset.createdAt
     );
     saveSession(window.localStorage, session);
-    router.replace(`/play/${DEMO_SESSION_ID}`);
-  }, [router, scenario]);
+    router.replace(`/play/${preset.sessionId}`);
+  }, [preset, router, scenario]);
 
   return (
     <PageFrame
@@ -55,7 +82,9 @@ export function DemoLauncher({ scenario }: { scenario: Scenario }) {
             <span className="border-world-bridge/40 loading-orbit loading-orbit--reverse absolute inset-3 rounded-full border" />
             <span className="bg-zhihu shadow-blue absolute inset-6 rounded-full" />
           </div>
-          <p className="text-sm font-medium">搭桥试水 · 固定种子 20260902</p>
+          <p className="text-sm font-medium">
+            {preset.label} · 固定种子 {preset.seed}
+          </p>
           <p className="text-muted-foreground mt-2 text-xs">
             本入口只用于稳定演示，不改变正式体验路径。
           </p>

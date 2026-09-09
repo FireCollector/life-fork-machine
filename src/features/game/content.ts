@@ -1,6 +1,7 @@
 import rawSourceCardPack from "../../../content/evidence/source-cards.json";
 import rawOutcomeTemplates from "../../../content/scenarios/startup-outcome-templates.v1.json";
 import rawScenario from "../../../content/scenarios/startup-scenario.v1.json";
+import { graduateRawContent } from "./graduate-content";
 
 import {
   OutcomeTemplatesSchema,
@@ -216,6 +217,31 @@ export const demoContent = parseDemoContent({
   scenario: rawScenario,
   outcomes: rawOutcomeTemplates
 });
+
+/** All hand-reviewed scenarios that can be launched in the product today. */
+export const graduateContent = parseDemoContent(graduateRawContent);
+
+export const playableContents = [demoContent, graduateContent] as const;
+
+export function getPlayableContent(scenarioId?: string) {
+  return (
+    playableContents.find(
+      (content) => content.scenario.scenarioId === scenarioId
+    ) ?? demoContent
+  );
+}
+
+export const scenarioCatalog = playableContents.map((content) => ({
+  id: content.scenario.scenarioId,
+  title: content.scenario.title,
+  subtitle: content.scenario.subtitle,
+  worlds: content.scenario.worlds.map((world) => ({
+    id: world.id,
+    name: world.name,
+    tagline: world.tagline
+  })),
+  sourceCount: content.sourceCards.length
+}));
 
 export const contentStats = {
   sources: demoContent.sourceCards.length,

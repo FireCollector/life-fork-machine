@@ -1,18 +1,24 @@
 import type { Metadata } from "next";
 
 import { ForgeExperience } from "@/components/experience/forge-experience";
-import { demoContent } from "@/features/game";
+import { getPlayableContent } from "@/features/game";
 
 export const metadata: Metadata = {
   title: "证据熔炉"
 };
 
-export default function ForgePage() {
+export default async function ForgePage({
+  searchParams
+}: {
+  searchParams: Promise<{ scenario?: string }>;
+}) {
+  const { scenario } = await searchParams;
+  const content = getPlayableContent(scenario);
   return (
     <ForgeExperience
-      evidenceRetrievedAt={demoContent.evidenceRetrievedAt}
-      scenario={demoContent.scenario}
-      sourceCards={demoContent.sourceCards}
+      evidenceRetrievedAt={content.evidenceRetrievedAt}
+      scenario={content.scenario}
+      sourceCards={content.sourceCards}
     />
   );
 }

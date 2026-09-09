@@ -29,6 +29,7 @@ import { Button } from "@/components/ui/button";
 import {
   STATE_KEYS,
   DEMO_SESSION_ID,
+  GRADUATE_DEMO_SESSION_ID,
   advanceExperiment,
   buildOutcomeText,
   calculateOutcome,
@@ -135,7 +136,12 @@ export function ResultPreview({
       : undefined;
   const experimentDays = getExperimentDays(experiment);
   const experimentEvents = experimentRun?.events ?? [];
-  const isDemoSession = sessionId === DEMO_SESSION_ID;
+  const isDemoSession =
+    sessionId === DEMO_SESSION_ID || sessionId === GRADUATE_DEMO_SESSION_ID;
+  const demoResetHref =
+    sessionId === GRADUATE_DEMO_SESSION_ID
+      ? "/demo?scenario=graduate-school"
+      : "/demo";
   const resultMeaning = [
     { key: "supported" as const, label: "证据支持", color: "text-signal-lime" },
     {
@@ -247,8 +253,8 @@ export function ResultPreview({
       {
         label: "主要压力",
         value:
-          scenario.stateModel.dimensions[exploredOutcome.pressurePoint]?.label ??
-          exploredOutcome.pressurePoint
+          scenario.stateModel.dimensions[exploredOutcome.pressurePoint]
+            ?.label ?? exploredOutcome.pressurePoint
       },
       { label: "行动数", value: `${chosenActions.length} 次` },
       { label: "证据进度", value: `${experimentRun?.evidenceScore ?? 0} / 100` }
@@ -401,7 +407,10 @@ export function ResultPreview({
             <p className="text-zhihu text-xs font-medium tracking-[0.16em] uppercase">
               一眼看懂这次选择
             </p>
-            <h2 className="mt-2 text-2xl font-semibold" id="result-summary-title">
+            <h2
+              className="mt-2 text-2xl font-semibold"
+              id="result-summary-title"
+            >
               你选择了「{world.name}」
             </h2>
             <p className="text-muted-foreground mt-2 max-w-2xl text-sm leading-6">
@@ -512,9 +521,15 @@ export function ResultPreview({
                 </p>
                 {candidateOutcome ? (
                   <p className="mt-3 text-[10px] text-white/55">
-                    强项：{scenario.stateModel.dimensions[candidateOutcome.dominantStrength]?.label ?? candidateOutcome.dominantStrength}
+                    强项：
+                    {scenario.stateModel.dimensions[
+                      candidateOutcome.dominantStrength
+                    ]?.label ?? candidateOutcome.dominantStrength}
                     {" · "}
-                    压力：{scenario.stateModel.dimensions[candidateOutcome.pressurePoint]?.label ?? candidateOutcome.pressurePoint}
+                    压力：
+                    {scenario.stateModel.dimensions[
+                      candidateOutcome.pressurePoint
+                    ]?.label ?? candidateOutcome.pressurePoint}
                   </p>
                 ) : null}
               </button>
@@ -529,13 +544,18 @@ export function ResultPreview({
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <p className="text-zhihu text-[10px] font-medium tracking-[0.14em] uppercase">
-                {previewWorld.name} · {previewOutcome.mode === "explored" ? "实际账本" : "情景剖面"}
+                {previewWorld.name} ·{" "}
+                {previewOutcome.mode === "explored" ? "实际账本" : "情景剖面"}
               </p>
-              <h3 className="mt-2 text-lg font-semibold" id="world-preview-panel-title">
+              <h3
+                className="mt-2 text-lg font-semibold"
+                id="world-preview-panel-title"
+              >
                 {previewWorld.startingPoint}
               </h3>
               <p className="text-muted-foreground mt-2 max-w-2xl text-xs leading-5">
-                {previewWorld.tagline} 选择它不会覆盖当前结果；如果想真正走一遍，可以从这条世界重新开始。
+                {previewWorld.tagline}{" "}
+                选择它不会覆盖当前结果；如果想真正走一遍，可以从这条世界重新开始。
               </p>
             </div>
             {previewWorld.id !== session.selectedWorld ? (
@@ -547,7 +567,10 @@ export function ResultPreview({
           </div>
           <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
             {STATE_KEYS.map((key) => (
-              <div className="rounded-xl border border-white/[0.07] px-3 py-2.5" key={key}>
+              <div
+                className="rounded-xl border border-white/[0.07] px-3 py-2.5"
+                key={key}
+              >
                 <p className="text-muted-foreground text-[10px]">
                   {scenario.stateModel.dimensions[key]?.label ?? key}
                 </p>
@@ -763,11 +786,15 @@ export function ResultPreview({
               为什么是这个实验
             </p>
             <ul className="mt-2 space-y-1.5 text-xs leading-5 text-white/70">
-              {(comparison.experimentSelection?.reasons ?? [
-                "这条路径没有命中更具体的实验，先从基础核验开始。"
-              ]).map((reason) => (
+              {(
+                comparison.experimentSelection?.reasons ?? [
+                  "这条路径没有命中更具体的实验，先从基础核验开始。"
+                ]
+              ).map((reason) => (
                 <li className="flex gap-2" key={reason}>
-                  <span className="text-signal-lime" aria-hidden="true">·</span>
+                  <span className="text-signal-lime" aria-hidden="true">
+                    ·
+                  </span>
                   <span>{reason}</span>
                 </li>
               ))}
@@ -826,12 +853,16 @@ export function ResultPreview({
             </div>
             {isDemoSession && !experimentRun?.feedback ? (
               <div className="mt-3 flex flex-wrap gap-2">
-                <Button onClick={fastForwardRealityExperiment} size="sm" variant="secondary">
+                <Button
+                  onClick={fastForwardRealityExperiment}
+                  size="sm"
+                  variant="secondary"
+                >
                   快速推进实验
                   <ArrowRight aria-hidden="true" />
                 </Button>
                 <Button asChild size="sm" variant="ghost">
-                  <Link href="/demo">
+                  <Link href={demoResetHref}>
                     <RotateCcw aria-hidden="true" />
                     重置 Demo
                   </Link>
@@ -869,7 +900,7 @@ export function ResultPreview({
                         const day = experimentDays[event.day - 1];
                         return (
                           <div
-                            className="border-white/[0.07] rounded-lg border p-3"
+                            className="rounded-lg border border-white/[0.07] p-3"
                             key={`${event.day}-${event.choice}`}
                           >
                             <div className="flex flex-wrap items-center gap-2 text-[10px]">
@@ -900,10 +931,13 @@ export function ResultPreview({
                   </div>
                 ) : null}
                 {experimentRun.day < 7 ? (
-                  <div className="mt-4 rounded-xl border border-signal-lime/15 bg-signal-lime/[0.045] p-4">
+                  <div className="border-signal-lime/15 bg-signal-lime/[0.045] mt-4 rounded-xl border p-4">
                     {(() => {
                       const nextDay = experimentDays[experimentRun.day];
-                      const choices = nextDay.choices ?? [nextDay.action, "先补信息再决定"];
+                      const choices = nextDay.choices ?? [
+                        nextDay.action,
+                        "先补信息再决定"
+                      ];
                       return (
                         <>
                           <div className="flex flex-wrap items-center justify-between gap-2">
@@ -946,9 +980,11 @@ export function ResultPreview({
                           <label className="text-muted-foreground mt-3 block text-[10px]">
                             留下一条你的记录（可选）
                             <textarea
-                              className="mt-1.5 min-h-16 w-full resize-y rounded-lg border border-white/[0.08] bg-black/20 px-3 py-2 text-xs text-white outline-none placeholder:text-white/30 focus:border-signal-lime/40"
+                              className="focus:border-signal-lime/40 mt-1.5 min-h-16 w-full resize-y rounded-lg border border-white/[0.08] bg-black/20 px-3 py-2 text-xs text-white outline-none placeholder:text-white/30"
                               maxLength={240}
-                              onChange={(event) => setPendingNote(event.target.value)}
+                              onChange={(event) =>
+                                setPendingNote(event.target.value)
+                              }
                               placeholder="例如：对方说下周给合同，但没有给具体日期"
                               value={pendingNote}
                             />

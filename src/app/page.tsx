@@ -32,10 +32,10 @@ export default function HomePage() {
               {
                 icon: BookOpenText,
                 title: "真实经验",
-                text: "8 条知乎社区样本"
+                text: "14 条知乎社区样本"
               },
               { icon: GitFork, title: "三条人生", text: "同时间交叉回声" },
-              { icon: FlaskConical, title: "现实实验", text: "7 天可逆验证" }
+              { icon: FlaskConical, title: "现实实验", text: "两个可玩场景" }
             ].map((item, index) => (
               <div
                 className={`surface-lift stage-reveal rounded-2xl border border-white/[0.07] bg-white/[0.025] p-4 stage-delay-${index + 1}`}
@@ -63,7 +63,7 @@ export default function HomePage() {
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-muted-foreground text-xs font-medium tracking-[0.18em]">
-                  本届唯一开放困境
+                  已收录场景 01 / 02
                 </p>
                 <p className="mt-2 text-sm text-blue-200">
                   职业选择 / 共同风险 / 不可逆承诺
@@ -122,7 +122,7 @@ export default function HomePage() {
               size="lg"
             >
               <Link href="/calibrate">
-                启动人生实验
+                推演创业选择
                 <ArrowRight aria-hidden="true" />
               </Link>
             </Button>
@@ -132,10 +132,42 @@ export default function HomePage() {
               variant="outline"
             >
               <Link href="/demo">
-                直接进入 90 秒演示
+                直接进入创业演示
                 <GitFork aria-hidden="true" />
               </Link>
             </Button>
+            <div className="border-world-bridge/20 bg-world-bridge/[0.05] mt-5 rounded-2xl border p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-world-bridge text-xs font-medium tracking-[0.14em] uppercase">
+                    已收录场景 02 / 02
+                  </p>
+                  <h3 className="mt-2 text-lg font-semibold text-white">
+                    继续工作，还是辞职准备读研？
+                  </h3>
+                  <p className="text-muted-foreground mt-1 text-xs leading-5">
+                    把学历想象、收入中断和项目匹配拆开，再决定是否切换。
+                  </p>
+                </div>
+                <span className="border-signal-lime/25 bg-signal-lime/10 text-signal-lime shrink-0 rounded-full border px-2 py-1 text-[10px]">
+                  新场景
+                </span>
+              </div>
+              <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                <Button asChild variant="outline">
+                  <Link href="/calibrate?scenario=graduate-school">
+                    推演读研选择
+                    <ArrowRight aria-hidden="true" />
+                  </Link>
+                </Button>
+                <Button asChild variant="ghost">
+                  <Link href="/demo?scenario=graduate-school">
+                    直接进入读研演示
+                    <GitFork aria-hidden="true" />
+                  </Link>
+                </Button>
+              </div>
+            </div>
             <Button
               asChild
               className="mt-3 h-11 w-full rounded-xl"

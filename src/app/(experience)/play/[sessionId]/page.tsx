@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { PlayExperience } from "@/components/experience/play-experience";
-import { demoContent } from "@/features/game";
+import { PlayScenarioSession } from "@/components/experience/scenario-session-router";
 
 export const metadata: Metadata = {
   title: "三幕推演"
@@ -16,12 +15,5 @@ export default async function PlayPage({
   const { sessionId } = await params;
   if (!/^[a-zA-Z0-9_-]+$/.test(sessionId)) notFound();
 
-  return (
-    <PlayExperience
-      outcomes={demoContent.outcomes}
-      scenario={demoContent.scenario}
-      sessionId={sessionId}
-      sourceCards={demoContent.sourceCards}
-    />
-  );
+  return <PlayScenarioSession sessionId={sessionId} />;
 }
