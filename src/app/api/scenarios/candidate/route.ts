@@ -6,6 +6,11 @@ import { z } from "zod";
 import { type AiFailure } from "@/features/ai";
 import { DecisionBriefSchema } from "@/features/decision-brief";
 import {
+  applyCommunityLenses,
+  communityLensPrompt,
+  CommunityLensSelectionSchema
+} from "@/features/community-lenses";
+import {
   createEvidenceOrganizationRequest,
   EvidenceSourceSchema
 } from "@/features/evidence";
@@ -26,7 +31,8 @@ const BodySchema = z
     evidence: z.object({
       status: z.literal("ready"),
       items: z.array(ZhihuEvidenceItemSchema).min(3).max(12)
-    })
+    }),
+    communityViews: CommunityLensSelectionSchema.optional()
   })
   .strict();
 
@@ -62,11 +68,32 @@ export async function POST(request: Request) {
   const sources = parsed.data.evidence.items.map((item) =>
     EvidenceSourceSchema.parse(item)
   );
+  let brief = parsed.data.brief;
+  let promptContext = "";
+  try {
+    brief = applyCommunityLenses(brief, sources, parsed.data.communityViews);
+    promptContext = communityLensPrompt(sources, parsed.data.communityViews);
+  } catch (error) {
+    return json(
+      {
+        message:
+          error instanceof Error ? error.message : "所选观点无法带入候选场景。"
+      },
+      422
+    );
+  }
   const aiRequest = createEvidenceOrganizationRequest(
-    parsed.data.brief,
+    {
+      ...brief,
+      originalQuestion:
+        `${brief.originalQuestion.slice(0, 430)}${promptContext ? `\n\n${promptContext}` : ""}`.slice(
+          0,
+          800
+        )
+    },
     sources,
     requestId(
-      parsed.data.brief.id,
+      brief.id,
       sources.map((source) => source.sourceId)
     )
   );
@@ -76,12 +103,13 @@ export async function POST(request: Request) {
   );
   const pack =
     result.provenance === "ai-generated-candidate"
-      ? candidateFromAi(parsed.data.brief, sources, result)
-      : candidateFromRules(parsed.data.brief, sources);
+      ? candidateFromAi(brief, sources, result)
+      : candidateFromRules(brief, sources);
 
   return json({
     pack,
     validation: validateCandidateScenario(pack),
+    appliedCommunityViews: parsed.data.communityViews ?? null,
     notice:
       result.provenance === "ai-failure"
         ? `实时 AI 候选未通过：${(result as AiFailure).userMessage} 当前展示规则辅助草稿。`

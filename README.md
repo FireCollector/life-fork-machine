@@ -81,19 +81,20 @@ npm run dev
 
 其他入口：
 
-| 地址                             | 用途                         |
-| -------------------------------- | ---------------------------- |
-| `/`                              | 首页与项目介绍               |
-| `/demo`                          | 固定 90 秒队友 Demo          |
-| `/demo?scenario=graduate-school` | 读研选择的固定演示           |
-| `/topic-lab`                     | 预设或任意问题的候选结构生成 |
-| `/evidence-review`               | 知乎素材审核、版本与发布门禁 |
-| `/archive`                       | 本地决策档案、复盘与分支版本 |
-| `/calibrate`                     | 约束校准                     |
-| `/play/[sessionId]`              | 三幕推演                     |
-| `/result/[sessionId]`            | 代价报告与七天实验           |
-| `/api/health`                    | 应用健康检查                 |
-| `/api/ai/candidate`              | 服务端 AI 候选网关（需凭据） |
+| 地址                             | 用途                           |
+| -------------------------------- | ------------------------------ |
+| `/`                              | 首页与项目介绍                 |
+| `/demo`                          | 固定 90 秒队友 Demo            |
+| `/demo?scenario=graduate-school` | 读研选择的固定演示             |
+| `/topic-lab`                     | 预设或任意问题的候选结构生成   |
+| `/zhihu-import`                  | 从公开知乎问题、回答或文章开始 |
+| `/evidence-review`               | 知乎素材审核、版本与发布门禁   |
+| `/archive`                       | 本地决策档案、复盘与分支版本   |
+| `/calibrate`                     | 约束校准                       |
+| `/play/[sessionId]`              | 三幕推演                       |
+| `/result/[sessionId]`            | 代价报告与七天实验             |
+| `/api/health`                    | 应用健康检查                   |
+| `/api/ai/candidate`              | 服务端 AI 候选网关（需凭据）   |
 
 固定 Demo 的逐步点击路线见 [`content/D08-demo-kit.md`](content/D08-demo-kit.md)。
 
@@ -119,6 +120,10 @@ npm run dev
 
 打开 `/evidence-review`，先查看候选素材的标题、作者、原文链接和适用边界，再进行通过、驳回或待核验操作。至少通过 3 条并处理完待审核项后，才能锁定一个候选剧本版本。这个页面是内容生产工作台，不影响普通用户的主流程。
 
+### 想从知乎讨论直接开始
+
+打开 `/zhihu-import`，粘贴公开的知乎问题、回答或专栏文章链接。系统只通过官方公开检索寻找可回看的候选，不读取账号、私信、收藏或关注。若官方索引找到了原链接，会标记“找到了这条公开内容”；否则会明确标为“相关讨论”，不会把它伪装成原文。选择“最像我”和“让我不舒服”的两条不同观点后，它们会作为可追溯输入带进 `/topic-lab` 的关键假设与七天实验草稿，仍需人工审核才可发布。
+
 ## 技术结构
 
 ```text
@@ -137,6 +142,8 @@ AI 网关的服务端配置、缓存、日志边界与本地验收方式见 [`do
 任意议题生成的决策简报可通过 [`docs/ZHIHU-EVIDENCE-PIPELINE.md`](docs/ZHIHU-EVIDENCE-PIPELINE.md) 请求知乎候选经验；它只返回待审核的来源卡，不会把社区观点当成系统结论。
 
 在 `/topic-lab` 确认简报后，可以直接获取知乎候选并整理为“共同提醒、保留分歧、适用边界”三类观点簇。每条观点均保留原文回链，审核者可修改条件和风险并留下记录；完整边界见 [`docs/EVIDENCE-ORGANIZATION.md`](docs/EVIDENCE-ORGANIZATION.md)。
+
+也可以从 `/zhihu-import` 粘贴公开问题、回答或文章链接。它通过官方公开检索寻找可追溯候选，并清楚区分“原链接”和“相关讨论”；你选中的认同观点与反例会影响后续假设和实验草稿。完整的数据边界、失败处理与通用合同见 [`docs/ZHIHU-LINK-IMPORT.md`](docs/ZHIHU-LINK-IMPORT.md)。
 
 完成证据整理后还可生成一个三世界、三幕、带预算与来源的候选剧本。它始终是待编辑审核的草稿，不能替换正式 Demo 或直接发布；约束见 [`docs/CANDIDATE-SCENARIO-PACK.md`](docs/CANDIDATE-SCENARIO-PACK.md)。
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -29,6 +29,11 @@ import {
 } from "@/features/game";
 import type { EvidenceOrganization, EvidenceSource } from "@/features/evidence";
 import type { CandidateScenarioPack } from "@/features/scenario-candidate";
+import {
+  CommunityLensSelectionSchema,
+  communityLensSources,
+  type CommunityLensSelection
+} from "@/features/community-lenses";
 
 type SearchResponse = {
   status: "ready" | "empty" | "unavailable" | "rate-limited";
@@ -72,6 +77,60 @@ export function TopicLab() {
     useState<ScenarioResponse>();
   const [isBuildingScenario, setIsBuildingScenario] = useState(false);
   const [scenarioNotice, setScenarioNotice] = useState<string>();
+  const [communityViews, setCommunityViews] =
+    useState<CommunityLensSelection>();
+
+  useEffect(() => {
+    const task = window.setTimeout(() => {
+      const raw = window.localStorage.getItem(
+        "life-fork-machine:zhihu-link-import:v1"
+      );
+      if (!raw) return;
+      try {
+        const handoff = JSON.parse(raw) as {
+          brief?: typeof brief;
+          evidence?: { status?: string; items?: EvidenceSource[] };
+          communityViews?: unknown;
+        };
+        const views = CommunityLensSelectionSchema.parse(
+          handoff.communityViews
+        );
+        if (
+          !handoff.brief ||
+          handoff.evidence?.status !== "ready" ||
+          !handoff.evidence.items ||
+          handoff.evidence.items.length < 3
+        )
+          throw new Error("导入内容不完整");
+        const nextBrief = confirmDecisionBrief(handoff.brief);
+        communityLensSources(handoff.evidence.items, views);
+        setInput(nextBrief.originalQuestion);
+        setDraft(generateTopicDraft(nextBrief.originalQuestion));
+        setBrief(nextBrief);
+        setEvidence({
+          status: "ready",
+          message: "已带入本次知乎链接的公开候选来源。",
+          cached: false,
+          items: handoff.evidence.items
+        });
+        setCommunityViews(views);
+        setEvidenceNotice(
+          "已带入你选中的两种观点；它们会进入候选假设和实验。 "
+        );
+        window.localStorage.removeItem(
+          "life-fork-machine:zhihu-link-import:v1"
+        );
+      } catch {
+        window.localStorage.removeItem(
+          "life-fork-machine:zhihu-link-import:v1"
+        );
+        setEvidenceNotice(
+          "知乎链接导入内容无效或已过期；请重新导入公开链接。 "
+        );
+      }
+    }, 0);
+    return () => window.clearTimeout(task);
+  }, []);
 
   function generate() {
     try {
@@ -82,6 +141,7 @@ export function TopicLab() {
       setEvidence(undefined);
       setOrganization(undefined);
       setCandidateScenario(undefined);
+      setCommunityViews(undefined);
     } catch (generationError) {
       setError(
         generationError instanceof Error
@@ -101,6 +161,7 @@ export function TopicLab() {
       setEvidence(undefined);
       setOrganization(undefined);
       setCandidateScenario(undefined);
+      setCommunityViews(undefined);
     } catch {
       setError("这个预设暂时无法生成");
     }
@@ -149,7 +210,11 @@ export function TopicLab() {
       const response = await fetch("/api/evidence/organize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ brief, evidence })
+        body: JSON.stringify({
+          brief,
+          evidence,
+          ...(communityViews ? { communityViews } : {})
+        })
       });
       const result = (await response.json()) as
         EvidenceOrganization | OrganizationFailure;
@@ -214,6 +279,9 @@ export function TopicLab() {
               <FileCheck2 aria-hidden="true" />
               素材审核
             </Link>
+          </Button>
+          <Button asChild size="sm" variant="ghost">
+            <Link href="/zhihu-import">从知乎链接开始</Link>
           </Button>
           <Button asChild size="sm" variant="ghost">
             <Link href="/">
@@ -300,6 +368,39 @@ export function TopicLab() {
             onChange={setBrief}
             onConfirm={() => setBrief(confirmDecisionBrief(brief))}
           />
+          {communityViews && evidence?.status === "ready"
+            ? (() => {
+                const lenses = communityLensSources(
+                  evidence.items,
+                  communityViews
+                );
+                return (
+                  <section className="border-zhihu/25 bg-zhihu/[0.04] rounded-3xl border p-5 sm:p-6">
+                    <p className="text-xs tracking-[0.16em] text-blue-200 uppercase">
+                      Selected community lenses
+                    </p>
+                    <h2 className="mt-2 text-lg font-semibold">
+                      这次候选会带着两种不同看法生成。
+                    </h2>
+                    <div className="mt-4 grid gap-3 text-sm md:grid-cols-2">
+                      <p className="border-signal-lime/20 rounded-2xl border p-3 text-white/80">
+                        <span className="text-signal-lime">最像我的观点：</span>
+                        {lenses.resonates.title}
+                      </p>
+                      <p className="border-world-leap/20 rounded-2xl border p-3 text-white/80">
+                        <span className="text-world-leap">
+                          我不想面对的反例：
+                        </span>
+                        {lenses.unsettles.title}
+                      </p>
+                    </div>
+                    <p className="text-muted-foreground mt-3 text-xs leading-5">
+                      它们不是结论，而是会被写进待核对假设和七天实验问题的两条可追溯输入。
+                    </p>
+                  </section>
+                );
+              })()
+            : null}
           <section className="glass-panel border-zhihu/20 rounded-3xl border p-5 sm:p-7">
             <p className="text-xs tracking-[0.16em] text-blue-200 uppercase">
               Live evidence / 知乎候选

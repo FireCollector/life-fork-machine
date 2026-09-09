@@ -40,6 +40,22 @@ test("topic lab switches presets and validates arbitrary topic drafts", async ({
   await expect(page.getByText("需要审核").first()).toBeVisible();
 });
 
+test("Zhihu link import explains public-data scope before a discussion is brought into the lab", async ({
+  page
+}) => {
+  await page.goto("/zhihu-import");
+  await expect(
+    page.getByRole("heading", { name: "从一场已经在发生的讨论开始。" })
+  ).toBeVisible();
+  await page
+    .getByLabel("知乎公开链接")
+    .fill("https://www.zhihu.com/question/123456789");
+  await expect(page.getByText("授权与隐私边界")).toBeVisible();
+  await expect(
+    page.getByText("不读取你的账号、私信、收藏、关注或任何私有内容。")
+  ).toBeVisible();
+});
+
 test("decision archive starts local-only and does not mistake fixed demos for personal history", async ({
   page
 }) => {
@@ -91,6 +107,7 @@ const routes = [
   "/calibrate",
   "/forge",
   "/topic-lab",
+  "/zhihu-import",
   "/archive",
   "/play/demo",
   "/result/demo"
