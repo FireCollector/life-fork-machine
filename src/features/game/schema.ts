@@ -466,7 +466,53 @@ export const FeelingSchema = z.enum([
   "stretched",
   "blocked"
 ]);
+export const EvidenceSignalSchema = z.enum([
+  "supported",
+  "contradicted",
+  "insufficient"
+]);
+export const ExperimentBlockerSchema = z.enum([
+  "no_response",
+  "missing_material",
+  "conditions_changed",
+  "time_or_cost",
+  "other"
+]);
+export const ExperimentAdjustmentReasonSchema = z.enum([
+  "evidence_supported",
+  "evidence_contradicted",
+  "information_missing",
+  "no_response",
+  "missing_material",
+  "conditions_changed",
+  "capacity_risk",
+  "skipped"
+]);
+export const ExperimentAdjustmentStatusSchema = z.enum([
+  "suggested",
+  "accepted",
+  "customized",
+  "reverted"
+]);
 const CalendarDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+
+export const ExperimentAdjustmentSchema = z
+  .object({
+    id: z.string().min(1),
+    sourceDay: z.number().int().min(1).max(6),
+    targetDay: z.number().int().min(2).max(7),
+    reason: ExperimentAdjustmentReasonSchema,
+    evidenceSignal: EvidenceSignalSchema.optional(),
+    blocker: ExperimentBlockerSchema.optional(),
+    originalAction: z.string().min(1).max(240),
+    recommendedAction: z.string().min(1).max(240),
+    explanation: z.string().min(1).max(400),
+    status: ExperimentAdjustmentStatusSchema,
+    appliedAction: z.string().min(1).max(240).optional(),
+    createdAt: z.string().datetime(),
+    updatedAt: z.string().datetime().optional()
+  })
+  .strict();
 
 export const ExperimentRunSchema = z
   .object({
@@ -491,12 +537,15 @@ export const ExperimentRunSchema = z
             occurredOn: CalendarDateSchema.optional(),
             evidenceType: EvidenceTypeSchema.optional(),
             feeling: FeelingSchema.optional(),
+            evidenceSignal: EvidenceSignalSchema.optional(),
+            blocker: ExperimentBlockerSchema.optional(),
             nextStep: z.string().max(240).optional()
           })
           .strict()
       )
       .max(7)
       .optional(),
+    adjustments: z.array(ExperimentAdjustmentSchema).max(6).optional(),
     evidenceScore: z.number().int().min(0).max(100).optional()
   })
   .strict()
@@ -521,6 +570,15 @@ export const ExperimentRunSchema = z
         message: "a stopped experiment requires a reason",
         path: ["stopReason"]
       });
+    }
+    for (const adjustment of run.adjustments ?? []) {
+      if (adjustment.targetDay !== adjustment.sourceDay + 1) {
+        context.addIssue({
+          code: "custom",
+          message: "an experiment adjustment must target the next day",
+          path: ["adjustments"]
+        });
+      }
     }
   });
 
@@ -567,6 +625,9 @@ export type AssumptionResultKind = z.infer<typeof AssumptionResultKindSchema>;
 export type ExperimentMode = z.infer<typeof ExperimentModeSchema>;
 export type EvidenceType = z.infer<typeof EvidenceTypeSchema>;
 export type Feeling = z.infer<typeof FeelingSchema>;
+export type EvidenceSignal = z.infer<typeof EvidenceSignalSchema>;
+export type ExperimentBlocker = z.infer<typeof ExperimentBlockerSchema>;
+export type ExperimentAdjustment = z.infer<typeof ExperimentAdjustmentSchema>;
 export type AssumptionCheck = z.infer<typeof AssumptionCheckSchema>;
 export type CalibrationAnswers = z.infer<typeof CalibrationAnswersSchema>;
 export type CommitmentLedger = z.infer<typeof CommitmentLedgerSchema>;

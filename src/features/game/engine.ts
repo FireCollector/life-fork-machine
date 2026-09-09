@@ -7,7 +7,10 @@ import {
   type AssumptionResultKind,
   type CalibrationAnswers,
   type CommitmentLedger,
+  type EvidenceSignal,
   type EvidenceType,
+  type ExperimentAdjustment,
+  type ExperimentBlocker,
   type ExperimentMode,
   type Feeling,
   type GameSession,
@@ -19,6 +22,7 @@ import {
   type World,
   type WorldId
 } from "./schema";
+import { getExperimentDays } from "./experiment-simulation";
 
 export type GameRuleErrorCode =
   | "WORLD_ALREADY_SELECTED"
@@ -42,6 +46,8 @@ export type GameRuleErrorCode =
   | "EXPERIMENT_STOPPED"
   | "EXPERIMENT_DATE_LOCKED"
   | "EXPERIMENT_RESCHEDULE_INVALID"
+  | "EXPERIMENT_ADJUSTMENT_NOT_FOUND"
+  | "EXPERIMENT_ADJUSTMENT_INVALID"
   | "EXPERIMENT_NOT_COMPLETED"
   | "SESSION_NOT_COMPLETED";
 
@@ -86,6 +92,8 @@ export interface ExperimentAdvanceOptions {
   entryStatus?: "completed" | "skipped";
   evidenceType?: EvidenceType;
   feeling?: Feeling;
+  evidenceSignal?: EvidenceSignal;
+  blocker?: ExperimentBlocker;
   nextStep?: string;
 }
 
@@ -604,6 +612,93 @@ function addCalendarDays(date: string, days: number) {
   return value.toISOString().slice(0, 10);
 }
 
+function adjustmentForEvent(
+  experiment: OutcomeTemplates["sevenDayExperiments"][number],
+  event: {
+    day: number;
+    status: "completed" | "skipped";
+    evidenceSignal?: EvidenceSignal;
+    blocker?: ExperimentBlocker;
+    feeling?: Feeling;
+  },
+  now: string
+): ExperimentAdjustment | undefined {
+  if (event.day >= 7) return undefined;
+
+  const targetDay = event.day + 1;
+  const originalAction =
+    getExperimentDays(experiment)[targetDay - 1]?.action ??
+    experiment.steps[Math.min(targetDay - 1, experiment.steps.length - 1)];
+
+  let reason: ExperimentAdjustment["reason"] = "information_missing";
+  let recommendedAction = `先把「${originalAction}」缩小成一件 20 分钟内能完成的补信息动作。`;
+  let explanation = `第 ${event.day} 天的信息仍不足以支持或推翻原假设；先补一个关键缺口，不急着下结论。`;
+
+  if (event.status === "skipped") {
+    reason = "skipped";
+    recommendedAction = `把「${originalAction}」改成一个可在 10 分钟内完成的最小动作，再决定是否继续。`;
+    explanation = `第 ${event.day} 天被跳过；先降低下一步门槛，避免用补课式任务制造压力。`;
+  } else if (event.blocker === "no_response") {
+    reason = "no_response";
+    recommendedAction =
+      "发出一条带明确截止时间的问题，同时找一个不依赖对方回复的备用信息源。";
+    explanation = `第 ${event.day} 天记录了“对方未回复”；这只能说明信息暂时缺失，不能当成否定证据。`;
+  } else if (event.blocker === "missing_material") {
+    reason = "missing_material";
+    recommendedAction =
+      "把缺少的材料列成清单，先找一份可替代的公开记录或确认获取时间。";
+    explanation = `第 ${event.day} 天缺少材料；下一步先验证材料能否获得，不根据空白补出结论。`;
+  } else if (event.blocker === "conditions_changed") {
+    reason = "conditions_changed";
+    recommendedAction =
+      "把变化后的条件写成一条新约束，并只重估受它影响的那一项。";
+    explanation = `第 ${event.day} 天出现条件变化；旧计划不应直接沿用，需要先确认哪项前提失效。`;
+  } else if (
+    event.blocker === "time_or_cost" ||
+    event.feeling === "stretched" ||
+    event.feeling === "blocked"
+  ) {
+    reason = "capacity_risk";
+    recommendedAction = `把「${originalAction}」缩小到一个时间和成本上限明确的小动作；超过上限就停止。`;
+    explanation = `第 ${event.day} 天显示时间、成本或精力承受度偏高；先控制投入，再继续取证。`;
+  } else if (event.evidenceSignal === "contradicted") {
+    reason = "evidence_contradicted";
+    recommendedAction =
+      "先追问一条会改变判断的反例，并暂停扩大承诺，直到关键矛盾被解释。";
+    explanation = `第 ${event.day} 天的记录与原假设相冲突；下一步应查清冲突，而不是忽略它或直接反向下注。`;
+  } else if (event.evidenceSignal === "supported") {
+    reason = "evidence_supported";
+    recommendedAction = `在保留原有上限的前提下，补一个能复核「${originalAction}」的具体细节。`;
+    explanation = `第 ${event.day} 天出现支持原假设的信息；单条信息还不够，下一步验证它是否可复核。`;
+  }
+
+  return {
+    id: `adjustment-day-${event.day}`,
+    sourceDay: event.day,
+    targetDay,
+    reason,
+    ...(event.evidenceSignal ? { evidenceSignal: event.evidenceSignal } : {}),
+    ...(event.blocker ? { blocker: event.blocker } : {}),
+    originalAction,
+    recommendedAction,
+    explanation,
+    status: "suggested",
+    createdAt: now
+  };
+}
+
+export function getExperimentAdjustment(
+  session: GameSession,
+  experimentId: string,
+  targetDay: number
+) {
+  const run = session.experimentRun;
+  if (!run || run.experimentId !== experimentId) return undefined;
+  return (run.adjustments ?? []).find(
+    (adjustment) => adjustment.targetDay === targetDay
+  );
+}
+
 export function getExperimentAvailability(
   session: GameSession,
   experimentId: string,
@@ -712,6 +807,10 @@ export function advanceExperiment(
     ...(run.mode === "real" ? { occurredOn } : {}),
     ...(options.evidenceType ? { evidenceType: options.evidenceType } : {}),
     ...(options.feeling ? { feeling: options.feeling } : {}),
+    ...(options.evidenceSignal
+      ? { evidenceSignal: options.evidenceSignal }
+      : {}),
+    ...(options.blocker ? { blocker: options.blocker } : {}),
     ...(options.nextStep?.trim() ? { nextStep: options.nextStep.trim() } : {}),
     ...(day === 4 ? { surprise: true } : {})
   };
@@ -719,6 +818,10 @@ export function advanceExperiment(
     100,
     (run.evidenceScore ?? 0) + (options.note?.trim() ? 18 : 12)
   );
+  const adjustment =
+    run.mode === "real"
+      ? adjustmentForEvent(experiment, event, nowOrDefault(now))
+      : undefined;
   const nextSession = GameSessionSchema.parse({
     ...session,
     experimentRun: {
@@ -727,6 +830,11 @@ export function advanceExperiment(
       status: day === 7 ? "completed" : "active",
       day,
       events: [...existingEvents, event],
+      ...(adjustment
+        ? { adjustments: [...(run.adjustments ?? []), adjustment] }
+        : run.adjustments
+          ? { adjustments: run.adjustments }
+          : {}),
       evidenceScore,
       ...(run.mode === "real" && day < 7
         ? {
@@ -739,6 +847,168 @@ export function advanceExperiment(
     updatedAt: nowOrDefault(now)
   });
   return { session: nextSession, day };
+}
+
+function requireAdjustableExperiment(
+  session: GameSession,
+  experimentId: string,
+  adjustmentId: string
+) {
+  const run = session.experimentRun;
+  if (!run || run.experimentId !== experimentId) {
+    throw new GameRuleError(
+      "EXPERIMENT_NOT_STARTED",
+      "Start this experiment first."
+    );
+  }
+  if (run.mode !== "real" || run.status !== "active") {
+    throw new GameRuleError(
+      "EXPERIMENT_ADJUSTMENT_INVALID",
+      "Only an active real experiment can change a suggested adjustment."
+    );
+  }
+  const adjustment = (run.adjustments ?? []).find(
+    (item) => item.id === adjustmentId
+  );
+  if (!adjustment) {
+    throw new GameRuleError(
+      "EXPERIMENT_ADJUSTMENT_NOT_FOUND",
+      "This experiment adjustment does not exist."
+    );
+  }
+  if (adjustment.targetDay !== run.day + 1) {
+    throw new GameRuleError(
+      "EXPERIMENT_ADJUSTMENT_INVALID",
+      "Only the next adjustment can be changed."
+    );
+  }
+  return { run, adjustment };
+}
+
+function replaceAdjustment(
+  session: GameSession,
+  experimentId: string,
+  adjustmentId: string,
+  next: ExperimentAdjustment,
+  now?: string
+) {
+  const run = session.experimentRun;
+  if (!run || run.experimentId !== experimentId) {
+    throw new GameRuleError(
+      "EXPERIMENT_NOT_STARTED",
+      "Start this experiment first."
+    );
+  }
+  return GameSessionSchema.parse({
+    ...session,
+    experimentRun: {
+      ...run,
+      adjustments: (run.adjustments ?? []).map((item) =>
+        item.id === adjustmentId ? next : item
+      )
+    },
+    updatedAt: nowOrDefault(now)
+  });
+}
+
+export function acceptExperimentAdjustment(
+  session: GameSession,
+  experimentId: string,
+  adjustmentId: string,
+  now?: string
+) {
+  const { adjustment } = requireAdjustableExperiment(
+    session,
+    experimentId,
+    adjustmentId
+  );
+  if (adjustment.status !== "suggested") {
+    throw new GameRuleError(
+      "EXPERIMENT_ADJUSTMENT_INVALID",
+      "This adjustment has already been handled."
+    );
+  }
+  return replaceAdjustment(
+    session,
+    experimentId,
+    adjustmentId,
+    {
+      ...adjustment,
+      status: "accepted",
+      appliedAction: adjustment.recommendedAction,
+      updatedAt: nowOrDefault(now)
+    },
+    now
+  );
+}
+
+export function customizeExperimentAdjustment(
+  session: GameSession,
+  experimentId: string,
+  adjustmentId: string,
+  action: string,
+  now?: string
+) {
+  const { adjustment } = requireAdjustableExperiment(
+    session,
+    experimentId,
+    adjustmentId
+  );
+  if (adjustment.status !== "suggested") {
+    throw new GameRuleError(
+      "EXPERIMENT_ADJUSTMENT_INVALID",
+      "This adjustment has already been handled."
+    );
+  }
+  const safeAction = action.trim();
+  if (!safeAction || safeAction.length > 240) {
+    throw new GameRuleError(
+      "EXPERIMENT_ADJUSTMENT_INVALID",
+      "Write a short, concrete next action before saving it."
+    );
+  }
+  return replaceAdjustment(
+    session,
+    experimentId,
+    adjustmentId,
+    {
+      ...adjustment,
+      status: "customized",
+      appliedAction: safeAction,
+      updatedAt: nowOrDefault(now)
+    },
+    now
+  );
+}
+
+export function revertExperimentAdjustment(
+  session: GameSession,
+  experimentId: string,
+  adjustmentId: string,
+  now?: string
+) {
+  const { adjustment } = requireAdjustableExperiment(
+    session,
+    experimentId,
+    adjustmentId
+  );
+  if (adjustment.status === "reverted") {
+    throw new GameRuleError(
+      "EXPERIMENT_ADJUSTMENT_INVALID",
+      "This adjustment already uses the original plan."
+    );
+  }
+  return replaceAdjustment(
+    session,
+    experimentId,
+    adjustmentId,
+    {
+      ...adjustment,
+      status: "reverted",
+      updatedAt: nowOrDefault(now)
+    },
+    now
+  );
 }
 
 export function skipExperimentDay(

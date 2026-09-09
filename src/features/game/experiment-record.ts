@@ -41,7 +41,8 @@ export function buildExperimentExport(
           stoppedAt: run?.stoppedAt,
           stopReason: run?.stopReason,
           evidenceScore: run?.evidenceScore ?? 0,
-          entries: run?.events ?? []
+          entries: run?.events ?? [],
+          adjustments: run?.adjustments ?? []
         }
       : undefined
   };

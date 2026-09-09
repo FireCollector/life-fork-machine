@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   AlertTriangle,
+  BadgeCheck,
   ArrowLeft,
   ArrowRight,
   Banknote,
@@ -34,21 +35,27 @@ import {
   STATE_KEYS,
   DEMO_SESSION_ID,
   GRADUATE_DEMO_SESSION_ID,
+  acceptExperimentAdjustment,
   advanceExperiment,
   buildExperimentExport,
   buildOutcomeText,
   calculateOutcome,
+  customizeExperimentAdjustment,
   deleteSession,
   forkSession,
+  getExperimentAdjustment,
   getExperimentAvailability,
   getExperimentDays,
   recordExperimentFeedback,
+  revertExperimentAdjustment,
   rescheduleExperiment,
   saveSession,
   skipExperimentDay,
   startExperiment,
   stopExperiment,
   type EvidenceType,
+  type EvidenceSignal,
+  type ExperimentBlocker,
   type Feeling,
   type ExperimentFeedback,
   type OutcomeTemplates,
@@ -63,6 +70,20 @@ function addCalendarDays(date: string, days: number) {
   value.setUTCDate(value.getUTCDate() + days);
   return value.toISOString().slice(5);
 }
+
+const evidenceSignalLabels: Record<EvidenceSignal, string> = {
+  supported: "更支持原假设",
+  contradicted: "和原假设冲突",
+  insufficient: "信息还不够"
+};
+
+const blockerLabels: Record<ExperimentBlocker, string> = {
+  no_response: "对方没有回复",
+  missing_material: "材料拿不到",
+  conditions_changed: "条件突然变化",
+  time_or_cost: "时间或成本超标",
+  other: "其他阻碍"
+};
 
 export function ResultPreview({
   outcomes,
@@ -88,7 +109,13 @@ export function ResultPreview({
   const [pendingEvidenceType, setPendingEvidenceType] =
     useState<EvidenceType>("document");
   const [pendingFeeling, setPendingFeeling] = useState<Feeling>("steady");
+  const [pendingEvidenceSignal, setPendingEvidenceSignal] =
+    useState<EvidenceSignal>("insufficient");
+  const [pendingBlocker, setPendingBlocker] = useState<ExperimentBlocker | "">(
+    ""
+  );
   const [pendingNextStep, setPendingNextStep] = useState("");
+  const [customAdjustmentAction, setCustomAdjustmentAction] = useState("");
   const [rescheduleDate, setRescheduleDate] = useState("");
   const [stopReason, setStopReason] = useState("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -173,6 +200,10 @@ export function ResultPreview({
     experiment.id,
     new Date().toISOString()
   );
+  const nextExperimentAdjustment =
+    experimentRun?.mode === "real"
+      ? getExperimentAdjustment(session, experiment.id, experimentRun.day + 1)
+      : undefined;
   const resultMeaning = [
     { key: "supported" as const, label: "证据支持", color: "text-signal-lime" },
     {
@@ -372,6 +403,8 @@ export function ResultPreview({
             note: pendingNote,
             evidenceType: pendingEvidenceType,
             feeling: pendingFeeling,
+            evidenceSignal: pendingEvidenceSignal,
+            ...(pendingBlocker ? { blocker: pendingBlocker } : {}),
             nextStep: pendingNextStep
           }
         ).session
@@ -379,6 +412,8 @@ export function ResultPreview({
       setPendingChoice(undefined);
       setPendingNote("");
       setPendingNextStep("");
+      setPendingEvidenceSignal("insufficient");
+      setPendingBlocker("");
     } catch (error) {
       setExperimentError(
         error instanceof Error ? error.message : "实验无法推进"
@@ -473,6 +508,67 @@ export function ResultPreview({
     } catch (error) {
       setExperimentError(
         error instanceof Error ? error.message : "请先写下停止原因"
+      );
+    }
+  }
+
+  function acceptTodayAdjustment() {
+    if (!nextExperimentAdjustment) return;
+    try {
+      saveExperimentSession(
+        acceptExperimentAdjustment(
+          completedSession,
+          experiment.id,
+          nextExperimentAdjustment.id,
+          new Date().toISOString()
+        )
+      );
+      setPendingChoice(nextExperimentAdjustment.recommendedAction);
+      setCustomAdjustmentAction("");
+    } catch (error) {
+      setExperimentError(
+        error instanceof Error ? error.message : "调整建议暂时无法采用"
+      );
+    }
+  }
+
+  function customizeTodayAdjustment() {
+    if (!nextExperimentAdjustment) return;
+    try {
+      saveExperimentSession(
+        customizeExperimentAdjustment(
+          completedSession,
+          experiment.id,
+          nextExperimentAdjustment.id,
+          customAdjustmentAction,
+          new Date().toISOString()
+        )
+      );
+      setPendingChoice(customAdjustmentAction.trim());
+      setCustomAdjustmentAction("");
+    } catch (error) {
+      setExperimentError(
+        error instanceof Error ? error.message : "请先写下一步要做什么"
+      );
+    }
+  }
+
+  function revertTodayAdjustment() {
+    if (!nextExperimentAdjustment) return;
+    try {
+      saveExperimentSession(
+        revertExperimentAdjustment(
+          completedSession,
+          experiment.id,
+          nextExperimentAdjustment.id,
+          new Date().toISOString()
+        )
+      );
+      setPendingChoice(undefined);
+      setCustomAdjustmentAction("");
+    } catch (error) {
+      setExperimentError(
+        error instanceof Error ? error.message : "这条调整暂时无法撤销"
       );
     }
   }
@@ -1107,6 +1203,19 @@ export function ResultPreview({
                                 {event.feeling ? `感受：${event.feeling}` : ""}
                               </p>
                             ) : null}
+                            {event.evidenceSignal || event.blocker ? (
+                              <p className="text-muted-foreground mt-1.5 text-[10px] leading-4">
+                                {event.evidenceSignal
+                                  ? `证据判断：${evidenceSignalLabels[event.evidenceSignal]}`
+                                  : ""}
+                                {event.evidenceSignal && event.blocker
+                                  ? " · "
+                                  : ""}
+                                {event.blocker
+                                  ? `实际阻碍：${blockerLabels[event.blocker]}`
+                                  : ""}
+                              </p>
+                            ) : null}
                             {event.nextStep ? (
                               <p className="mt-1.5 text-[10px] leading-4 text-white/65">
                                 明天：{event.nextStep}
@@ -1119,6 +1228,86 @@ export function ResultPreview({
                         );
                       })}
                     </div>
+                  </div>
+                ) : null}
+                {!isDemoSession && nextExperimentAdjustment ? (
+                  <div className="mt-4 rounded-xl border border-blue-300/20 bg-blue-300/[0.045] p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="flex items-center gap-2 text-xs font-medium text-blue-100">
+                        <BadgeCheck aria-hidden="true" className="size-4" />
+                        给第 {nextExperimentAdjustment.targetDay} 天的调整建议
+                      </p>
+                      <span className="rounded-full border border-white/10 px-2 py-0.5 text-[10px] text-white/60">
+                        来自第 {nextExperimentAdjustment.sourceDay} 天记录
+                      </span>
+                    </div>
+                    <p className="text-muted-foreground mt-2 text-xs leading-5">
+                      {nextExperimentAdjustment.explanation}
+                    </p>
+                    <div className="mt-3 rounded-lg border border-white/[0.08] bg-black/15 p-3">
+                      <p className="text-[10px] text-white/45">原计划</p>
+                      <p className="mt-1 text-xs leading-5 text-white/70">
+                        {nextExperimentAdjustment.originalAction}
+                      </p>
+                      <p className="mt-3 text-[10px] text-blue-200/70">
+                        建议改为
+                      </p>
+                      <p className="mt-1 text-xs leading-5 text-white">
+                        {nextExperimentAdjustment.recommendedAction}
+                      </p>
+                    </div>
+                    {nextExperimentAdjustment.status === "suggested" ? (
+                      <>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <Button onClick={acceptTodayAdjustment} size="sm">
+                            采用建议
+                          </Button>
+                          <Button
+                            onClick={revertTodayAdjustment}
+                            size="sm"
+                            variant="ghost"
+                          >
+                            保持原计划
+                          </Button>
+                        </div>
+                        <div className="mt-3 flex gap-2">
+                          <input
+                            className="h-9 min-w-0 flex-1 rounded-lg border border-white/[0.08] bg-black/20 px-3 text-xs text-white"
+                            maxLength={240}
+                            onChange={(event) =>
+                              setCustomAdjustmentAction(event.target.value)
+                            }
+                            placeholder="或写下你自己的下一步"
+                            value={customAdjustmentAction}
+                          />
+                          <Button
+                            disabled={!customAdjustmentAction.trim()}
+                            onClick={customizeTodayAdjustment}
+                            size="sm"
+                            variant="outline"
+                          >
+                            保存自定义
+                          </Button>
+                        </div>
+                      </>
+                    ) : nextExperimentAdjustment.status === "reverted" ? (
+                      <p className="mt-3 text-[10px] leading-4 text-white/55">
+                        你选择保留原计划；本条建议会留在记录中，但不会改变下一天的动作。
+                      </p>
+                    ) : (
+                      <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                        <p className="text-signal-lime text-[10px] leading-4">
+                          已写入下一步：{nextExperimentAdjustment.appliedAction}
+                        </p>
+                        <Button
+                          onClick={revertTodayAdjustment}
+                          size="sm"
+                          variant="ghost"
+                        >
+                          撤销调整
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 ) : null}
                 {experimentRun.status === "stopped" ? (
@@ -1168,10 +1357,22 @@ export function ResultPreview({
                     <div className="border-signal-lime/15 bg-signal-lime/[0.045] mt-4 rounded-xl border p-4">
                       {(() => {
                         const nextDay = experimentDays[experimentRun.day];
-                        const choices = nextDay.choices ?? [
-                          nextDay.action,
-                          "先补信息再决定"
-                        ];
+                        const appliedAdjustmentAction =
+                          nextExperimentAdjustment?.targetDay === nextDay.day &&
+                          (nextExperimentAdjustment.status === "accepted" ||
+                            nextExperimentAdjustment.status === "customized")
+                            ? nextExperimentAdjustment.appliedAction
+                            : undefined;
+                        const choices = appliedAdjustmentAction
+                          ? [appliedAdjustmentAction, nextDay.action]
+                          : (nextDay.choices ?? [
+                              nextDay.action,
+                              "先补信息再决定"
+                            ]);
+                        const selectedChoice =
+                          pendingChoice ??
+                          appliedAdjustmentAction ??
+                          choices[0];
                         return (
                           <>
                             <div className="flex flex-wrap items-center justify-between gap-2">
@@ -1197,9 +1398,9 @@ export function ResultPreview({
                             >
                               {choices.map((choice) => (
                                 <button
-                                  aria-pressed={pendingChoice === choice}
+                                  aria-pressed={selectedChoice === choice}
                                   className={`rounded-lg border px-3 py-2.5 text-left text-xs transition ${
-                                    pendingChoice === choice
+                                    selectedChoice === choice
                                       ? "border-signal-lime/50 bg-signal-lime/10 text-white"
                                       : "border-white/[0.08] bg-white/[0.025] text-white/70 hover:border-white/20 hover:bg-white/[0.06]"
                                   }`}
@@ -1224,7 +1425,7 @@ export function ResultPreview({
                               />
                             </label>
                             {!isDemoSession ? (
-                              <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                              <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
                                 <label className="text-muted-foreground text-[10px]">
                                   证据类型
                                   <select
@@ -1264,6 +1465,56 @@ export function ResultPreview({
                                     <option value="steady">基本稳定</option>
                                     <option value="stretched">有点吃力</option>
                                     <option value="blocked">被卡住了</option>
+                                  </select>
+                                </label>
+                                <label className="text-muted-foreground text-[10px]">
+                                  这条信息更像
+                                  <select
+                                    className="mt-1 block h-9 w-full rounded-lg border border-white/[0.08] bg-black/20 px-2 text-xs text-white"
+                                    onChange={(event) =>
+                                      setPendingEvidenceSignal(
+                                        event.target.value as EvidenceSignal
+                                      )
+                                    }
+                                    value={pendingEvidenceSignal}
+                                  >
+                                    <option value="supported">
+                                      支持原假设
+                                    </option>
+                                    <option value="contradicted">
+                                      和原假设冲突
+                                    </option>
+                                    <option value="insufficient">
+                                      还不能判断
+                                    </option>
+                                  </select>
+                                </label>
+                                <label className="text-muted-foreground text-[10px]">
+                                  遇到的阻碍（可选）
+                                  <select
+                                    className="mt-1 block h-9 w-full rounded-lg border border-white/[0.08] bg-black/20 px-2 text-xs text-white"
+                                    onChange={(event) =>
+                                      setPendingBlocker(
+                                        event.target.value as
+                                          ExperimentBlocker | ""
+                                      )
+                                    }
+                                    value={pendingBlocker}
+                                  >
+                                    <option value="">没有 / 不确定</option>
+                                    <option value="no_response">
+                                      对方没有回复
+                                    </option>
+                                    <option value="missing_material">
+                                      材料拿不到
+                                    </option>
+                                    <option value="conditions_changed">
+                                      条件突然变化
+                                    </option>
+                                    <option value="time_or_cost">
+                                      时间或成本超标
+                                    </option>
+                                    <option value="other">其他</option>
                                   </select>
                                 </label>
                                 <label className="text-muted-foreground text-[10px]">

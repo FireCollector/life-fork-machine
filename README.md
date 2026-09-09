@@ -143,7 +143,7 @@ AI 网关的服务端配置、缓存、日志边界与本地验收方式见 [`do
 
 项目还提供公开、开发和本地隐藏三类 AI 评测集，统一检查结构、来源忠实、路线差异、实验边界和安全性。运行 `npm run eval:ai` 即可查看不含密钥或题目正文的汇总；在获得配额授权后可运行 `npm run eval:ai:live` 建立真实 Provider 基线。隐藏题不会进入 GitHub。详见 [`docs/AI-EVALUATION.md`](docs/AI-EVALUATION.md)。
 
-七天实验分为固定 Demo 的快速模拟和普通体验的真实日期记录。真实模式支持每天记录、跳过、改期、提前停止、导出和删除本地记录；细则见 [`docs/REAL-EXPERIMENTS.md`](docs/REAL-EXPERIMENTS.md)。
+七天实验分为固定 Demo 的快速模拟和普通体验的真实日期记录。真实模式支持每天记录、跳过、改期、提前停止、导出和删除本地记录；若当天遇到未回复、材料缺失、条件变化或成本失控，下一天会给出可解释、可改写和可撤销的调整建议。细则见 [`docs/REAL-EXPERIMENTS.md`](docs/REAL-EXPERIMENTS.md) 与 [`docs/ADAPTIVE-EXPERIMENTS.md`](docs/ADAPTIVE-EXPERIMENTS.md)。
 
 核心原则：
 

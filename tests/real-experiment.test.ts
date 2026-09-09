@@ -2,12 +2,15 @@ import { describe, expect, it } from "vitest";
 
 import {
   advanceExperiment,
+  acceptExperimentAdjustment,
   buildExperimentExport,
+  customizeExperimentAdjustment,
   createSession,
   demoContent,
   getExperimentAvailability,
   loadSession,
   rescheduleExperiment,
+  revertExperimentAdjustment,
   selectWorld,
   sessionStorageKey,
   skipExperimentDay,
@@ -186,5 +189,113 @@ describe("TASK-038 real seven-day experiment", () => {
       day: 1,
       startedOn: "2026-09-01"
     });
+  });
+});
+
+describe("TASK-039 adaptive experiment", () => {
+  it("creates a traceable next-day suggestion from an explicit blocker, then lets the user undo it", () => {
+    const experimentId = "test-market-return";
+    let session = startExperiment(
+      completedSession(),
+      demoContent.outcomes,
+      experimentId,
+      "2026-09-01T09:00:00.000Z",
+      { mode: "real" }
+    );
+
+    session = advanceExperiment(
+      session,
+      demoContent.outcomes,
+      experimentId,
+      "2026-09-01T10:00:00.000Z",
+      {
+        choice: "向对方确认岗位要求",
+        note: "消息已发出，但当天没有回复。",
+        evidenceType: "conversation",
+        evidenceSignal: "insufficient",
+        blocker: "no_response",
+        feeling: "steady"
+      }
+    ).session;
+
+    const suggestion = session.experimentRun?.adjustments?.[0];
+    expect(suggestion).toMatchObject({
+      sourceDay: 1,
+      targetDay: 2,
+      reason: "no_response",
+      blocker: "no_response",
+      status: "suggested"
+    });
+    expect(suggestion?.explanation).toContain("信息暂时缺失");
+
+    session = acceptExperimentAdjustment(
+      session,
+      experimentId,
+      suggestion!.id,
+      "2026-09-01T10:01:00.000Z"
+    );
+    expect(session.experimentRun?.adjustments?.[0]).toMatchObject({
+      status: "accepted",
+      appliedAction: suggestion?.recommendedAction
+    });
+
+    session = revertExperimentAdjustment(
+      session,
+      experimentId,
+      suggestion!.id,
+      "2026-09-01T10:02:00.000Z"
+    );
+    expect(session.experimentRun?.adjustments?.[0]).toMatchObject({
+      status: "reverted"
+    });
+  });
+
+  it("changes the next action differently when evidence conflicts with the initial assumption", () => {
+    const experimentId = "test-market-return";
+    let session = startExperiment(
+      completedSession(),
+      demoContent.outcomes,
+      experimentId,
+      "2026-09-01T09:00:00.000Z",
+      { mode: "real" }
+    );
+    session = advanceExperiment(
+      session,
+      demoContent.outcomes,
+      experimentId,
+      "2026-09-01T10:00:00.000Z",
+      {
+        choice: "核对岗位描述",
+        note: "岗位职责和先前承诺不一致。",
+        evidenceType: "document",
+        evidenceSignal: "contradicted",
+        feeling: "clearer"
+      }
+    ).session;
+
+    const suggestion = session.experimentRun?.adjustments?.[0];
+    expect(suggestion).toMatchObject({ reason: "evidence_contradicted" });
+    expect(suggestion?.recommendedAction).toContain("暂停扩大承诺");
+
+    session = customizeExperimentAdjustment(
+      session,
+      experimentId,
+      suggestion!.id,
+      "先约一次 20 分钟沟通，只确认职责边界。",
+      "2026-09-01T10:01:00.000Z"
+    );
+    expect(session.experimentRun?.adjustments?.[0]).toMatchObject({
+      status: "customized",
+      appliedAction: "先约一次 20 分钟沟通，只确认职责边界。"
+    });
+    expect(
+      buildExperimentExport(session, demoContent.scenario, demoContent.outcomes)
+        .experiment?.adjustments
+    ).toEqual([
+      expect.objectContaining({
+        reason: "evidence_contradicted",
+        status: "customized"
+      })
+    ]);
   });
 });

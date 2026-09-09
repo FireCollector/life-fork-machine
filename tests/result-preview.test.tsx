@@ -5,11 +5,13 @@ import { ResultPreview } from "../src/components/experience/result-preview";
 import {
   applyAction,
   applyAssumptionBlast,
+  advanceExperiment,
   createSession,
   DEMO_SESSION_ID,
   demoContent,
   saveSession,
   selectWorld,
+  startExperiment,
   type CalibrationAnswers
 } from "../src/features/game";
 
@@ -195,6 +197,80 @@ describe("D06 result cost map", () => {
     expect(screen.getByRole("link", { name: "返回继续推演" })).toHaveAttribute(
       "href",
       "/play/unfinished-session"
+    );
+  });
+
+  it("shows the reason for a real-experiment adjustment and lets the user undo it", async () => {
+    const sessionId = "adaptive-real-session";
+    const now = new Date().toISOString();
+    let session = selectWorld(
+      createSession(calibration, demoContent.scenario, {
+        id: sessionId,
+        seed: 29,
+        now
+      }),
+      demoContent.scenario,
+      "bridge",
+      now
+    );
+    session = applyAction(
+      session,
+      demoContent.scenario,
+      "bridge-1-evidence-sprint",
+      now
+    ).session;
+    session = applyAction(
+      session,
+      demoContent.scenario,
+      "bridge-2-conditional-join",
+      now
+    ).session;
+    session = applyAssumptionBlast(
+      session,
+      demoContent.outcomes,
+      "equity-promise-breaks",
+      now
+    ).session;
+    session = applyAction(
+      session,
+      demoContent.scenario,
+      "bridge-3-validated-join",
+      now
+    ).session;
+    session = startExperiment(
+      session,
+      demoContent.outcomes,
+      "test-family-stress",
+      now,
+      { mode: "real" }
+    );
+    session = advanceExperiment(
+      session,
+      demoContent.outcomes,
+      "test-family-stress",
+      now,
+      {
+        choice: "请对方补一份现金流说明",
+        note: "对方没有回复。",
+        evidenceType: "conversation",
+        evidenceSignal: "insufficient",
+        blocker: "no_response",
+        feeling: "steady"
+      }
+    ).session;
+    saveSession(window.localStorage, session);
+
+    renderResult(sessionId);
+
+    expect(await screen.findByText("给第 2 天的调整建议")).toBeInTheDocument();
+    expect(screen.getByText(/信息暂时缺失/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "采用建议" }));
+    await waitFor(() =>
+      expect(screen.getByText(/已写入下一步：/)).toBeInTheDocument()
+    );
+    fireEvent.click(screen.getByRole("button", { name: "撤销调整" }));
+    await waitFor(() =>
+      expect(screen.getByText(/你选择保留原计划/)).toBeInTheDocument()
     );
   });
 });
