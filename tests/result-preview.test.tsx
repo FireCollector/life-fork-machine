@@ -6,11 +6,16 @@ import {
   applyAction,
   applyAssumptionBlast,
   createSession,
+  DEMO_SESSION_ID,
   demoContent,
   saveSession,
   selectWorld,
   type CalibrationAnswers
 } from "../src/features/game";
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn() })
+}));
 
 const NOW = "2026-09-01T10:00:00.000Z";
 const calibration: CalibrationAnswers = {
@@ -48,7 +53,7 @@ describe("D06 result cost map", () => {
   it("renders the full cost map and copies a grounded text result", async () => {
     let session = selectWorld(
       createSession(calibration, demoContent.scenario, {
-        id: "result-test-session",
+        id: DEMO_SESSION_ID,
         seed: 23,
         now: NOW
       }),
@@ -82,7 +87,7 @@ describe("D06 result cost map", () => {
     ).session;
     saveSession(window.localStorage, session);
 
-    renderResult(session.id);
+    renderResult(DEMO_SESSION_ID);
 
     expect(
       screen.getByRole("heading", { name: "搭桥试水的代价地图。" })
@@ -131,7 +136,7 @@ describe("D06 result cost map", () => {
       screen.getByText("账还没算全，不要把家庭支持当成确定条件。")
     ).toBeInTheDocument();
     expect(screen.getByText("退出规则")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "开始七天实验" }));
+    fireEvent.click(screen.getByRole("button", { name: "开始演示七天模拟" }));
     await waitFor(() =>
       expect(screen.getByText("已推进 0 / 7 天")).toBeInTheDocument()
     );

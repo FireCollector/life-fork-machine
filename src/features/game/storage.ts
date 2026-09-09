@@ -65,13 +65,53 @@ export function saveSession(
   notifyLocalChange();
 }
 
+/** Delete exactly one local decision record. This never touches other sessions. */
+export function deleteSession(
+  storage: Pick<Storage, "removeItem">,
+  sessionId: string
+) {
+  storage.removeItem(sessionStorageKey(sessionId));
+  notifyLocalChange();
+}
+
 export function loadSession(
   storage: Pick<Storage, "getItem" | "removeItem">,
   sessionId: string
 ): GameSession | undefined {
   const key = sessionStorageKey(sessionId);
-  const parsed = GameSessionSchema.safeParse(readJson(storage, key));
+  const raw = readJson(storage, key);
+  const parsed = GameSessionSchema.safeParse(
+    migrateLegacyExperiment(raw, sessionId)
+  );
   if (parsed.success && parsed.data.id === sessionId) return parsed.data;
   storage.removeItem(key);
   return undefined;
+}
+
+/**
+ * v1 experiment runs predate an explicit mode and date lock. A frozen Demo
+ * keeps behaving like a Demo; ordinary in-progress records become real-mode
+ * records anchored to their last update rather than silently becoming a fake
+ * completed seven-day experiment.
+ */
+function migrateLegacyExperiment(raw: unknown, sessionId: string) {
+  if (!raw || typeof raw !== "object") return raw;
+  const candidate = raw as Record<string, unknown>;
+  const run = candidate.experimentRun;
+  if (!run || typeof run !== "object" || "mode" in run) return raw;
+  const updatedAt =
+    typeof candidate.updatedAt === "string" ? candidate.updatedAt : undefined;
+  const date = updatedAt?.slice(0, 10);
+  const isFixedDemo =
+    sessionId === "demo-bridge-v1" || sessionId === "demo-graduate-v1";
+  return {
+    ...candidate,
+    experimentRun: {
+      ...(run as Record<string, unknown>),
+      mode: isFixedDemo ? "demo" : "real",
+      ...(isFixedDemo || !date
+        ? {}
+        : { startedOn: date, nextAvailableOn: date })
+    }
+  };
 }

@@ -7,6 +7,9 @@ import {
   type AssumptionResultKind,
   type CalibrationAnswers,
   type CommitmentLedger,
+  type EvidenceType,
+  type ExperimentMode,
+  type Feeling,
   type GameSession,
   type OutcomeTemplates,
   type Scenario,
@@ -36,6 +39,9 @@ export type GameRuleErrorCode =
   | "EXPERIMENT_ALREADY_STARTED"
   | "EXPERIMENT_NOT_STARTED"
   | "EXPERIMENT_COMPLETED"
+  | "EXPERIMENT_STOPPED"
+  | "EXPERIMENT_DATE_LOCKED"
+  | "EXPERIMENT_RESCHEDULE_INVALID"
   | "EXPERIMENT_NOT_COMPLETED"
   | "SESSION_NOT_COMPLETED";
 
@@ -77,6 +83,15 @@ export interface AssumptionCheckResult {
 export interface ExperimentAdvanceOptions {
   choice?: string;
   note?: string;
+  entryStatus?: "completed" | "skipped";
+  evidenceType?: EvidenceType;
+  feeling?: Feeling;
+  nextStep?: string;
+}
+
+export interface ExperimentStartOptions {
+  /** Demo mode is deliberately fast; regular product entry passes `real`. */
+  mode?: ExperimentMode;
 }
 
 /** @deprecated D10 keeps this name so the current UI can migrate in D11. */
@@ -308,7 +323,11 @@ export function forkSession(
   const fork = createSession(calibration, scenario, {
     ...options,
     id: options.id ?? `${session.id}-fork-${worldId}-${Date.now()}`,
-    seed: options.seed ?? session.seed + scenario.worlds.findIndex((world) => world.id === worldId) + 1
+    seed:
+      options.seed ??
+      session.seed +
+        scenario.worlds.findIndex((world) => world.id === worldId) +
+        1
   });
   return selectWorld(fork, scenario, worldId, options.now);
 }
@@ -575,11 +594,51 @@ function requireExperiment(outcomes: OutcomeTemplates, experimentId: string) {
   return experiment;
 }
 
+function calendarDate(now?: string) {
+  return nowOrDefault(now).slice(0, 10);
+}
+
+function addCalendarDays(date: string, days: number) {
+  const value = new Date(`${date}T12:00:00.000Z`);
+  value.setUTCDate(value.getUTCDate() + days);
+  return value.toISOString().slice(0, 10);
+}
+
+export function getExperimentAvailability(
+  session: GameSession,
+  experimentId: string,
+  now?: string
+) {
+  const run = session.experimentRun;
+  if (!run || run.experimentId !== experimentId) {
+    return { available: false, reason: "实验尚未开始" } as const;
+  }
+  if (run.status === "stopped") {
+    return { available: false, reason: "实验已提前停止" } as const;
+  }
+  if (run.status === "completed") {
+    return { available: false, reason: "七天记录已完成" } as const;
+  }
+  if (run.mode === "demo") return { available: true } as const;
+
+  const today = calendarDate(now);
+  const availableOn = run.nextAvailableOn ?? run.startedOn ?? today;
+  if (today < availableOn) {
+    return {
+      available: false,
+      availableOn,
+      reason: `下一条记录会在 ${availableOn} 解锁`
+    } as const;
+  }
+  return { available: true, availableOn } as const;
+}
+
 export function startExperiment(
   session: GameSession,
   outcomes: OutcomeTemplates,
   experimentId: string,
-  now?: string
+  now?: string,
+  options: ExperimentStartOptions = {}
 ): GameSession {
   if (session.status !== "completed") {
     throw new GameRuleError(
@@ -594,14 +653,18 @@ export function startExperiment(
       "This session already has an experiment run."
     );
   }
+  const mode = options.mode ?? "demo";
+  const startedOn = calendarDate(now);
   return GameSessionSchema.parse({
     ...session,
     experimentRun: {
       experimentId,
+      mode,
       status: "active",
       day: 0,
       events: [],
-      evidenceScore: 0
+      evidenceScore: 0,
+      ...(mode === "real" ? { startedOn, nextAvailableOn: startedOn } : {})
     },
     updatedAt: nowOrDefault(now)
   });
@@ -622,18 +685,34 @@ export function advanceExperiment(
       "Start this experiment before advancing a day."
     );
   }
+  if (run.status === "stopped") {
+    throw new GameRuleError(
+      "EXPERIMENT_STOPPED",
+      "This experiment was stopped and cannot accept more records."
+    );
+  }
   if (run.status === "completed" || run.day >= 7) {
     throw new GameRuleError(
       "EXPERIMENT_COMPLETED",
       "This experiment has already reached day 7."
     );
   }
+  const availability = getExperimentAvailability(session, experimentId, now);
+  if (!availability.available) {
+    throw new GameRuleError("EXPERIMENT_DATE_LOCKED", availability.reason);
+  }
   const day = run.day + 1;
+  const occurredOn = calendarDate(now);
   const existingEvents = run.events ?? [];
   const event = {
     day,
     choice: options.choice?.trim() || experiment.steps[Math.min(day - 1, 2)],
     ...(options.note?.trim() ? { note: options.note.trim() } : {}),
+    status: options.entryStatus ?? "completed",
+    ...(run.mode === "real" ? { occurredOn } : {}),
+    ...(options.evidenceType ? { evidenceType: options.evidenceType } : {}),
+    ...(options.feeling ? { feeling: options.feeling } : {}),
+    ...(options.nextStep?.trim() ? { nextStep: options.nextStep.trim() } : {}),
     ...(day === 4 ? { surprise: true } : {})
   };
   const evidenceScore = Math.min(
@@ -644,15 +723,101 @@ export function advanceExperiment(
     ...session,
     experimentRun: {
       experimentId: experiment.id,
+      mode: run.mode,
       status: day === 7 ? "completed" : "active",
       day,
       events: [...existingEvents, event],
       evidenceScore,
+      ...(run.mode === "real" && day < 7
+        ? {
+            startedOn: run.startedOn ?? occurredOn,
+            nextAvailableOn: addCalendarDays(run.startedOn ?? occurredOn, day)
+          }
+        : {}),
       ...(day === 7 && run.feedback ? { feedback: run.feedback } : {})
     },
     updatedAt: nowOrDefault(now)
   });
   return { session: nextSession, day };
+}
+
+export function skipExperimentDay(
+  session: GameSession,
+  outcomes: OutcomeTemplates,
+  experimentId: string,
+  now?: string,
+  note?: string
+) {
+  return advanceExperiment(session, outcomes, experimentId, now, {
+    choice: "今天跳过，已记录原因",
+    note,
+    entryStatus: "skipped"
+  });
+}
+
+export function rescheduleExperiment(
+  session: GameSession,
+  experimentId: string,
+  nextAvailableOn: string,
+  now?: string
+): GameSession {
+  const run = session.experimentRun;
+  if (!run || run.experimentId !== experimentId) {
+    throw new GameRuleError(
+      "EXPERIMENT_NOT_STARTED",
+      "Start this experiment first."
+    );
+  }
+  if (run.mode !== "real" || run.status !== "active") {
+    throw new GameRuleError(
+      "EXPERIMENT_RESCHEDULE_INVALID",
+      "Only an active real experiment can be rescheduled."
+    );
+  }
+  const today = calendarDate(now);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(nextAvailableOn) || nextAvailableOn < today) {
+    throw new GameRuleError(
+      "EXPERIMENT_RESCHEDULE_INVALID",
+      "Choose today or a future calendar date."
+    );
+  }
+  return GameSessionSchema.parse({
+    ...session,
+    experimentRun: { ...run, nextAvailableOn },
+    updatedAt: nowOrDefault(now)
+  });
+}
+
+export function stopExperiment(
+  session: GameSession,
+  experimentId: string,
+  reason: string,
+  now?: string
+): GameSession {
+  const run = session.experimentRun;
+  const safeReason = reason.trim();
+  if (!run || run.experimentId !== experimentId) {
+    throw new GameRuleError(
+      "EXPERIMENT_NOT_STARTED",
+      "Start this experiment first."
+    );
+  }
+  if (run.status !== "active" || !safeReason) {
+    throw new GameRuleError(
+      "EXPERIMENT_STOPPED",
+      "Only an active experiment with a recorded reason can be stopped."
+    );
+  }
+  return GameSessionSchema.parse({
+    ...session,
+    experimentRun: {
+      ...run,
+      status: "stopped",
+      stoppedAt: nowOrDefault(now),
+      stopReason: safeReason
+    },
+    updatedAt: nowOrDefault(now)
+  });
 }
 
 export function recordExperimentFeedback(
@@ -786,25 +951,30 @@ export function selectExperiment(
       );
       const matchesWorld = Boolean(
         session.selectedWorld &&
-          (!candidate.worldIds || candidate.worldIds.includes(session.selectedWorld))
+        (!candidate.worldIds ||
+          candidate.worldIds.includes(session.selectedWorld))
       );
       const matchesAssumption = Boolean(
         session.assumptionResult &&
-          (!candidate.assumptionResults ||
-            candidate.assumptionResults.includes(session.assumptionResult))
+        (!candidate.assumptionResults ||
+          candidate.assumptionResults.includes(session.assumptionResult))
       );
       const worldEligible =
         !candidate.worldIds ||
-        Boolean(session.selectedWorld && candidate.worldIds.includes(session.selectedWorld));
+        Boolean(
+          session.selectedWorld &&
+          candidate.worldIds.includes(session.selectedWorld)
+        );
       const assumptionEligible =
         !candidate.assumptionResults ||
         Boolean(
           session.assumptionResult &&
-            candidate.assumptionResults.includes(session.assumptionResult)
+          candidate.assumptionResults.includes(session.assumptionResult)
         );
 
       const latestActionIndex = matchedActionIds.reduce(
-        (latest, actionId) => Math.max(latest, actionIndexes.get(actionId) ?? -1),
+        (latest, actionId) =>
+          Math.max(latest, actionIndexes.get(actionId) ?? -1),
         -1
       );
       const pressureScore = candidate.statePressureKeys
@@ -824,7 +994,8 @@ export function selectExperiment(
       if (candidate.worldIds && matchesWorld) score += 28;
       if (candidate.assumptionResults && matchesAssumption) score += 36;
       if (candidate.statePressureKeys) score += Math.round(pressureScore / 20);
-      if (!worldEligible || !assumptionEligible) score = Number.NEGATIVE_INFINITY;
+      if (!worldEligible || !assumptionEligible)
+        score = Number.NEGATIVE_INFINITY;
 
       return {
         candidate,

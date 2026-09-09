@@ -362,7 +362,10 @@ export const OutcomeTemplatesSchema = z
             triggerActionIds: z.array(z.string().min(1)).min(1),
             /** Optional routing metadata used by the D24 selector. */
             worldIds: z.array(WorldIdSchema).min(1).optional(),
-            assumptionResults: z.array(AssumptionResultKindSchema).min(1).optional(),
+            assumptionResults: z
+              .array(AssumptionResultKindSchema)
+              .min(1)
+              .optional(),
             statePressureKeys: z.array(z.enum(STATE_KEYS)).min(1).optional(),
             priority: z.number().int().min(-100).max(100).optional(),
             question: z.string().min(1),
@@ -377,7 +380,11 @@ export const OutcomeTemplatesSchema = z
                     situation: z.string().min(1),
                     action: z.string().min(1),
                     evidence: z.string().min(1),
-                    choices: z.array(z.string().min(1)).min(2).max(3).optional(),
+                    choices: z
+                      .array(z.string().min(1))
+                      .min(2)
+                      .max(3)
+                      .optional(),
                     evidencePrompt: z.string().min(1).optional(),
                     surprise: z.boolean().optional()
                   })
@@ -444,12 +451,34 @@ export const CommitmentLedgerSchema = z
   })
   .strict();
 
+export const ExperimentModeSchema = z.enum(["demo", "real"]);
+export const ExperimentEventStatusSchema = z.enum(["completed", "skipped"]);
+export const EvidenceTypeSchema = z.enum([
+  "document",
+  "conversation",
+  "observation",
+  "number",
+  "other"
+]);
+export const FeelingSchema = z.enum([
+  "clearer",
+  "steady",
+  "stretched",
+  "blocked"
+]);
+const CalendarDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+
 export const ExperimentRunSchema = z
   .object({
     experimentId: z.string().min(1),
-    status: z.enum(["active", "completed"]),
+    mode: ExperimentModeSchema.default("real"),
+    status: z.enum(["active", "completed", "stopped"]),
     day: z.number().int().min(0).max(7),
     feedback: AssumptionResultKindSchema.optional(),
+    startedOn: CalendarDateSchema.optional(),
+    nextAvailableOn: CalendarDateSchema.optional(),
+    stoppedAt: z.string().datetime().optional(),
+    stopReason: z.string().min(1).max(240).optional(),
     events: z
       .array(
         z
@@ -457,7 +486,12 @@ export const ExperimentRunSchema = z
             day: z.number().int().min(1).max(7),
             choice: z.string().min(1),
             note: z.string().max(240).optional(),
-            surprise: z.boolean().optional()
+            surprise: z.boolean().optional(),
+            status: ExperimentEventStatusSchema.default("completed"),
+            occurredOn: CalendarDateSchema.optional(),
+            evidenceType: EvidenceTypeSchema.optional(),
+            feeling: FeelingSchema.optional(),
+            nextStep: z.string().max(240).optional()
           })
           .strict()
       )
@@ -479,6 +513,13 @@ export const ExperimentRunSchema = z
         code: "custom",
         message: "experiment feedback requires a completed experiment",
         path: ["feedback"]
+      });
+    }
+    if (run.status === "stopped" && !run.stopReason) {
+      context.addIssue({
+        code: "custom",
+        message: "a stopped experiment requires a reason",
+        path: ["stopReason"]
       });
     }
   });
@@ -523,6 +564,9 @@ export type ExperimentDay = NonNullable<
   OutcomeTemplates["sevenDayExperiments"][number]["simulationDays"]
 >[number];
 export type AssumptionResultKind = z.infer<typeof AssumptionResultKindSchema>;
+export type ExperimentMode = z.infer<typeof ExperimentModeSchema>;
+export type EvidenceType = z.infer<typeof EvidenceTypeSchema>;
+export type Feeling = z.infer<typeof FeelingSchema>;
 export type AssumptionCheck = z.infer<typeof AssumptionCheckSchema>;
 export type CalibrationAnswers = z.infer<typeof CalibrationAnswersSchema>;
 export type CommitmentLedger = z.infer<typeof CommitmentLedgerSchema>;

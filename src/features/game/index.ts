@@ -4,6 +4,7 @@ export * from "./engine";
 export * from "./evidence-review";
 export * from "./evidence-search";
 export * from "./experiment-simulation";
+export * from "./experiment-record";
 export * from "./outcome-text";
 export * from "./schema";
 export * from "./share-card";

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -9,6 +10,7 @@ import {
   Banknote,
   BookOpenText,
   Check,
+  CalendarDays,
   CircleHelp,
   Clipboard,
   Clock3,
@@ -19,7 +21,9 @@ import {
   Plus,
   RotateCcw,
   ShieldAlert,
-  Target
+  Target,
+  Trash2,
+  Download
 } from "lucide-react";
 
 import { OutcomeRadar } from "@/components/experience/outcome-radar";
@@ -31,13 +35,21 @@ import {
   DEMO_SESSION_ID,
   GRADUATE_DEMO_SESSION_ID,
   advanceExperiment,
+  buildExperimentExport,
   buildOutcomeText,
   calculateOutcome,
+  deleteSession,
   forkSession,
+  getExperimentAvailability,
   getExperimentDays,
   recordExperimentFeedback,
+  rescheduleExperiment,
   saveSession,
+  skipExperimentDay,
   startExperiment,
+  stopExperiment,
+  type EvidenceType,
+  type Feeling,
   type ExperimentFeedback,
   type OutcomeTemplates,
   type Scenario,
@@ -45,6 +57,12 @@ import {
   type SourceCard
 } from "@/features/game";
 import { useStoredSession } from "@/features/game/use-stored-session";
+
+function addCalendarDays(date: string, days: number) {
+  const value = new Date(`${date}T12:00:00.000Z`);
+  value.setUTCDate(value.getUTCDate() + days);
+  return value.toISOString().slice(5);
+}
 
 export function ResultPreview({
   outcomes,
@@ -57,6 +75,7 @@ export function ResultPreview({
   sessionId: string;
   sourceCards: SourceCard[];
 }) {
+  const router = useRouter();
   const stored = useStoredSession(sessionId);
   const session = stored.session;
   const [copyState, setCopyState] = useState<"idle" | "copied" | "error">(
@@ -66,6 +85,13 @@ export function ResultPreview({
   const [counterfactualError, setCounterfactualError] = useState<string>();
   const [pendingChoice, setPendingChoice] = useState<string>();
   const [pendingNote, setPendingNote] = useState("");
+  const [pendingEvidenceType, setPendingEvidenceType] =
+    useState<EvidenceType>("document");
+  const [pendingFeeling, setPendingFeeling] = useState<Feeling>("steady");
+  const [pendingNextStep, setPendingNextStep] = useState("");
+  const [rescheduleDate, setRescheduleDate] = useState("");
+  const [stopReason, setStopReason] = useState("");
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [previewWorldId, setPreviewWorldId] = useState<string>();
 
   if (!stored.hydrated) {
@@ -142,6 +168,11 @@ export function ResultPreview({
     sessionId === GRADUATE_DEMO_SESSION_ID
       ? "/demo?scenario=graduate-school"
       : "/demo";
+  const experimentAvailability = getExperimentAvailability(
+    session,
+    experiment.id,
+    new Date().toISOString()
+  );
   const resultMeaning = [
     { key: "supported" as const, label: "证据支持", color: "text-signal-lime" },
     {
@@ -282,7 +313,8 @@ export function ResultPreview({
           completedSession,
           outcomes,
           experiment.id,
-          new Date().toISOString()
+          new Date().toISOString(),
+          { mode: isDemoSession ? "demo" : "real" }
         )
       );
     } catch (error) {
@@ -300,7 +332,8 @@ export function ResultPreview({
           nextSession,
           outcomes,
           experiment.id,
-          new Date().toISOString()
+          new Date().toISOString(),
+          { mode: "demo" }
         );
       }
       while ((nextSession.experimentRun?.day ?? 0) < 7) {
@@ -334,11 +367,18 @@ export function ResultPreview({
           outcomes,
           experiment.id,
           new Date().toISOString(),
-          { choice: pendingChoice, note: pendingNote }
+          {
+            choice: pendingChoice,
+            note: pendingNote,
+            evidenceType: pendingEvidenceType,
+            feeling: pendingFeeling,
+            nextStep: pendingNextStep
+          }
         ).session
       );
       setPendingChoice(undefined);
       setPendingNote("");
+      setPendingNextStep("");
     } catch (error) {
       setExperimentError(
         error instanceof Error ? error.message : "实验无法推进"
@@ -381,6 +421,78 @@ export function ResultPreview({
         error instanceof Error ? error.message : "反馈暂时无法记录"
       );
     }
+  }
+
+  function skipToday() {
+    try {
+      saveExperimentSession(
+        skipExperimentDay(
+          completedSession,
+          outcomes,
+          experiment.id,
+          new Date().toISOString(),
+          pendingNote || "今天无法完成，先跳过并在下一天继续。"
+        ).session
+      );
+      setPendingNote("");
+    } catch (error) {
+      setExperimentError(
+        error instanceof Error ? error.message : "今天暂时无法跳过"
+      );
+    }
+  }
+
+  function rescheduleToday() {
+    try {
+      saveExperimentSession(
+        rescheduleExperiment(
+          completedSession,
+          experiment.id,
+          rescheduleDate,
+          new Date().toISOString()
+        )
+      );
+      setRescheduleDate("");
+    } catch (error) {
+      setExperimentError(
+        error instanceof Error ? error.message : "改期没有保存"
+      );
+    }
+  }
+
+  function stopCurrentExperiment() {
+    try {
+      saveExperimentSession(
+        stopExperiment(
+          completedSession,
+          experiment.id,
+          stopReason,
+          new Date().toISOString()
+        )
+      );
+    } catch (error) {
+      setExperimentError(
+        error instanceof Error ? error.message : "请先写下停止原因"
+      );
+    }
+  }
+
+  function downloadExperimentRecord() {
+    const data = buildExperimentExport(completedSession, scenario, outcomes);
+    const blob = new Blob([JSON.stringify(data, null, 2)], {
+      type: "application/json;charset=utf-8"
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `life-fork-experiment-${sessionId}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function deleteCurrentSession() {
+    deleteSession(window.localStorage, sessionId);
+    router.push("/");
   }
 
   return (
@@ -761,8 +873,21 @@ export function ResultPreview({
           </p>
           <h2 className="mt-3 text-xl font-semibold">{experiment.title}</h2>
           <p className="text-muted-foreground mt-2 text-xs leading-5">
-            用 7 天拿到现实证据，再重算未来 12 个月的压力。
+            {isDemoSession
+              ? "演示模式：用 7 次点击预览现实信息，不会被当成真实七天记录。"
+              : "真实模式：每天解锁一条记录，用 7 天拿到现实证据，再重算下一步。"}
           </p>
+          {!isDemoSession ? (
+            <div className="mt-4 flex items-start gap-3 rounded-2xl border border-blue-300/15 bg-blue-300/[0.045] p-4 text-xs leading-5 text-blue-100/80">
+              <CalendarDays
+                aria-hidden="true"
+                className="mt-0.5 size-4 shrink-0 text-blue-200"
+              />
+              <p>
+                真实记录保存在当前浏览器。今天只能完成当天任务；刷新、复制链接或返回报告都不会提前解锁明天。
+              </p>
+            </div>
+          ) : null}
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
             <div className="rounded-2xl border border-white/[0.08] bg-black/10 p-4">
               <p className="text-muted-foreground flex items-center gap-2 text-[10px] font-medium">
@@ -842,13 +967,17 @@ export function ResultPreview({
           <div className="mt-6 rounded-2xl border border-white/[0.09] bg-black/10 p-4">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <p className="text-sm font-medium">七天推进模拟</p>
+                <p className="text-sm font-medium">
+                  {isDemoSession ? "七天推进模拟" : "真实七天记录"}
+                </p>
                 <p className="text-muted-foreground mt-1 text-xs leading-5">
-                  每推进一天，都会看到一条新的现实信息。这里不等七天，点击即可演示。
+                  {isDemoSession
+                    ? "每推进一天，都会看到一条新的现实信息。这里不等七天，点击即可演示。"
+                    : "完成、跳过或改期都会留下原因；它们不会被包装成已经完成的实验。"}
                 </p>
               </div>
               <span className="rounded-full border border-white/10 px-2.5 py-1 text-[10px] text-white/55">
-                演示用
+                {isDemoSession ? "演示用" : "真实记录"}
               </span>
             </div>
             {isDemoSession && !experimentRun?.feedback ? (
@@ -885,6 +1014,42 @@ export function ResultPreview({
                 <p className="text-muted-foreground mt-2 text-[10px]">
                   已推进 {experimentRun.day} / 7 天
                 </p>
+                {!isDemoSession && experimentRun.startedOn ? (
+                  <div
+                    className="mt-4 grid grid-cols-7 gap-1.5"
+                    aria-label="真实实验日历"
+                  >
+                    {experimentDays.map((day) => {
+                      const event = experimentEvents.find(
+                        (item) => item.day === day.day
+                      );
+                      const isNext = day.day === experimentRun.day + 1;
+                      return (
+                        <div
+                          className={`rounded-lg border p-2 text-center text-[10px] ${event ? "border-signal-lime/25 bg-signal-lime/[0.06] text-signal-lime" : isNext ? "border-blue-300/30 bg-blue-300/[0.06] text-blue-100" : "border-white/[0.08] text-white/35"}`}
+                          key={day.day}
+                        >
+                          <p>第 {day.day} 天</p>
+                          <p className="mt-0.5 text-[9px] opacity-75">
+                            {addCalendarDays(
+                              experimentRun.startedOn!,
+                              day.day - 1
+                            )}
+                          </p>
+                          <p className="mt-1 text-[9px]">
+                            {event
+                              ? event.status === "skipped"
+                                ? "跳过"
+                                : "完成"
+                              : isNext
+                                ? "下一步"
+                                : "待解锁"}
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : null}
                 {experimentRun.day > 0 ? (
                   <div className="mt-4 rounded-xl border border-white/[0.08] bg-black/10 p-4">
                     <div className="flex items-center justify-between gap-3">
@@ -907,6 +1072,16 @@ export function ResultPreview({
                               <span className="text-signal-lime font-medium">
                                 第 {event.day} 天 · {day?.title}
                               </span>
+                              {event.status === "skipped" ? (
+                                <span className="rounded-full border border-white/10 px-2 py-0.5 text-white/60">
+                                  已跳过
+                                </span>
+                              ) : null}
+                              {event.occurredOn ? (
+                                <span className="text-white/45">
+                                  {event.occurredOn}
+                                </span>
+                              ) : null}
                               {event.surprise ? (
                                 <span className="text-world-leap rounded-full border border-orange-300/20 bg-orange-300/10 px-2 py-0.5">
                                   意外情况
@@ -921,6 +1096,22 @@ export function ResultPreview({
                                 你的记录：{event.note}
                               </p>
                             ) : null}
+                            {event.evidenceType || event.feeling ? (
+                              <p className="text-muted-foreground mt-1.5 text-[10px] leading-4">
+                                {event.evidenceType
+                                  ? `证据类型：${event.evidenceType}`
+                                  : ""}
+                                {event.evidenceType && event.feeling
+                                  ? " · "
+                                  : ""}
+                                {event.feeling ? `感受：${event.feeling}` : ""}
+                              </p>
+                            ) : null}
+                            {event.nextStep ? (
+                              <p className="mt-1.5 text-[10px] leading-4 text-white/65">
+                                明天：{event.nextStep}
+                              </p>
+                            ) : null}
                             <p className="text-muted-foreground mt-1.5 text-[10px] leading-4">
                               对照证据：{day?.evidence}
                             </p>
@@ -930,76 +1121,210 @@ export function ResultPreview({
                     </div>
                   </div>
                 ) : null}
-                {experimentRun.day < 7 ? (
-                  <div className="border-signal-lime/15 bg-signal-lime/[0.045] mt-4 rounded-xl border p-4">
-                    {(() => {
-                      const nextDay = experimentDays[experimentRun.day];
-                      const choices = nextDay.choices ?? [
-                        nextDay.action,
-                        "先补信息再决定"
-                      ];
-                      return (
-                        <>
-                          <div className="flex flex-wrap items-center justify-between gap-2">
-                            <p className="text-signal-lime text-[10px] font-medium">
-                              第 {nextDay.day} 天 · {nextDay.title}
-                            </p>
-                            {nextDay.surprise ? (
-                              <span className="text-world-leap rounded-full border border-orange-300/20 bg-orange-300/10 px-2 py-0.5 text-[10px]">
-                                今天可能有意外
-                              </span>
-                            ) : null}
-                          </div>
-                          <p className="mt-2 text-xs leading-5 text-white/75">
-                            {nextDay.situation}
-                          </p>
-                          <p className="text-muted-foreground mt-2 text-[10px] leading-4">
-                            {nextDay.evidencePrompt}
-                          </p>
-                          <div
-                            className="mt-3 grid gap-2 sm:grid-cols-2"
-                            role="group"
-                            aria-label={`第 ${nextDay.day} 天选择`}
-                          >
-                            {choices.map((choice) => (
-                              <button
-                                aria-pressed={pendingChoice === choice}
-                                className={`rounded-lg border px-3 py-2.5 text-left text-xs transition ${
-                                  pendingChoice === choice
-                                    ? "border-signal-lime/50 bg-signal-lime/10 text-white"
-                                    : "border-white/[0.08] bg-white/[0.025] text-white/70 hover:border-white/20 hover:bg-white/[0.06]"
-                                }`}
-                                key={choice}
-                                onClick={() => setPendingChoice(choice)}
-                                type="button"
-                              >
-                                {choice}
-                              </button>
-                            ))}
-                          </div>
-                          <label className="text-muted-foreground mt-3 block text-[10px]">
-                            留下一条你的记录（可选）
-                            <textarea
-                              className="focus:border-signal-lime/40 mt-1.5 min-h-16 w-full resize-y rounded-lg border border-white/[0.08] bg-black/20 px-3 py-2 text-xs text-white outline-none placeholder:text-white/30"
-                              maxLength={240}
-                              onChange={(event) =>
-                                setPendingNote(event.target.value)
-                              }
-                              placeholder="例如：对方说下周给合同，但没有给具体日期"
-                              value={pendingNote}
-                            />
-                          </label>
-                          <Button
-                            className="mt-3 w-full"
-                            onClick={advanceRealityExperiment}
-                          >
-                            推进到第 {experimentRun.day + 1} 天
-                            <ArrowRight aria-hidden="true" />
-                          </Button>
-                        </>
-                      );
-                    })()}
+                {experimentRun.status === "stopped" ? (
+                  <div className="border-world-leap/25 bg-world-leap/[0.06] mt-4 rounded-xl border p-4">
+                    <p className="text-world-leap text-xs font-medium">
+                      实验已提前停止
+                    </p>
+                    <p className="text-muted-foreground mt-2 text-xs leading-5">
+                      停止原因：{experimentRun.stopReason}
+                    </p>
+                    <p className="text-muted-foreground mt-2 text-[10px] leading-4">
+                      它没有形成七天结论；这也是一条真实记录，之后可以重新开始新的实验。
+                    </p>
                   </div>
+                ) : experimentRun.day < 7 ? (
+                  !isDemoSession && !experimentAvailability.available ? (
+                    <div className="mt-4 rounded-xl border border-blue-300/20 bg-blue-300/[0.045] p-4">
+                      <p className="text-sm font-medium text-blue-100">
+                        今天还不需要推进
+                      </p>
+                      <p className="text-muted-foreground mt-1.5 text-xs leading-5">
+                        {experimentAvailability.reason}
+                      </p>
+                      <label className="text-muted-foreground mt-4 block text-[10px]">
+                        想把下一次记录改到哪天？
+                        <input
+                          className="focus:border-zhihu/50 mt-1.5 h-9 w-full rounded-lg border border-white/[0.08] bg-black/20 px-3 text-xs text-white outline-none"
+                          min={new Date().toISOString().slice(0, 10)}
+                          onChange={(event) =>
+                            setRescheduleDate(event.target.value)
+                          }
+                          type="date"
+                          value={rescheduleDate}
+                        />
+                      </label>
+                      <Button
+                        className="mt-3"
+                        disabled={!rescheduleDate}
+                        onClick={rescheduleToday}
+                        size="sm"
+                        variant="outline"
+                      >
+                        保存改期
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="border-signal-lime/15 bg-signal-lime/[0.045] mt-4 rounded-xl border p-4">
+                      {(() => {
+                        const nextDay = experimentDays[experimentRun.day];
+                        const choices = nextDay.choices ?? [
+                          nextDay.action,
+                          "先补信息再决定"
+                        ];
+                        return (
+                          <>
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <p className="text-signal-lime text-[10px] font-medium">
+                                第 {nextDay.day} 天 · {nextDay.title}
+                              </p>
+                              {nextDay.surprise ? (
+                                <span className="text-world-leap rounded-full border border-orange-300/20 bg-orange-300/10 px-2 py-0.5 text-[10px]">
+                                  今天可能有意外
+                                </span>
+                              ) : null}
+                            </div>
+                            <p className="mt-2 text-xs leading-5 text-white/75">
+                              {nextDay.situation}
+                            </p>
+                            <p className="text-muted-foreground mt-2 text-[10px] leading-4">
+                              {nextDay.evidencePrompt}
+                            </p>
+                            <div
+                              className="mt-3 grid gap-2 sm:grid-cols-2"
+                              role="group"
+                              aria-label={`第 ${nextDay.day} 天选择`}
+                            >
+                              {choices.map((choice) => (
+                                <button
+                                  aria-pressed={pendingChoice === choice}
+                                  className={`rounded-lg border px-3 py-2.5 text-left text-xs transition ${
+                                    pendingChoice === choice
+                                      ? "border-signal-lime/50 bg-signal-lime/10 text-white"
+                                      : "border-white/[0.08] bg-white/[0.025] text-white/70 hover:border-white/20 hover:bg-white/[0.06]"
+                                  }`}
+                                  key={choice}
+                                  onClick={() => setPendingChoice(choice)}
+                                  type="button"
+                                >
+                                  {choice}
+                                </button>
+                              ))}
+                            </div>
+                            <label className="text-muted-foreground mt-3 block text-[10px]">
+                              今天发生了什么（可选）
+                              <textarea
+                                className="focus:border-signal-lime/40 mt-1.5 min-h-16 w-full resize-y rounded-lg border border-white/[0.08] bg-black/20 px-3 py-2 text-xs text-white outline-none placeholder:text-white/30"
+                                maxLength={240}
+                                onChange={(event) =>
+                                  setPendingNote(event.target.value)
+                                }
+                                placeholder="例如：对方说下周给合同，但没有给具体日期"
+                                value={pendingNote}
+                              />
+                            </label>
+                            {!isDemoSession ? (
+                              <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                                <label className="text-muted-foreground text-[10px]">
+                                  证据类型
+                                  <select
+                                    className="mt-1 block h-9 w-full rounded-lg border border-white/[0.08] bg-black/20 px-2 text-xs text-white"
+                                    onChange={(event) =>
+                                      setPendingEvidenceType(
+                                        event.target.value as EvidenceType
+                                      )
+                                    }
+                                    value={pendingEvidenceType}
+                                  >
+                                    <option value="document">
+                                      材料 / 文档
+                                    </option>
+                                    <option value="conversation">
+                                      沟通反馈
+                                    </option>
+                                    <option value="observation">
+                                      现场观察
+                                    </option>
+                                    <option value="number">数字 / 账目</option>
+                                    <option value="other">其他</option>
+                                  </select>
+                                </label>
+                                <label className="text-muted-foreground text-[10px]">
+                                  今天的感受
+                                  <select
+                                    className="mt-1 block h-9 w-full rounded-lg border border-white/[0.08] bg-black/20 px-2 text-xs text-white"
+                                    onChange={(event) =>
+                                      setPendingFeeling(
+                                        event.target.value as Feeling
+                                      )
+                                    }
+                                    value={pendingFeeling}
+                                  >
+                                    <option value="clearer">更清楚了</option>
+                                    <option value="steady">基本稳定</option>
+                                    <option value="stretched">有点吃力</option>
+                                    <option value="blocked">被卡住了</option>
+                                  </select>
+                                </label>
+                                <label className="text-muted-foreground text-[10px]">
+                                  明天最小一步
+                                  <input
+                                    className="mt-1 h-9 w-full rounded-lg border border-white/[0.08] bg-black/20 px-2 text-xs text-white"
+                                    maxLength={240}
+                                    onChange={(event) =>
+                                      setPendingNextStep(event.target.value)
+                                    }
+                                    placeholder="例如补一份材料"
+                                    value={pendingNextStep}
+                                  />
+                                </label>
+                              </div>
+                            ) : null}
+                            <Button
+                              className="mt-3 w-full"
+                              onClick={advanceRealityExperiment}
+                            >
+                              {isDemoSession
+                                ? `推进到第 ${experimentRun.day + 1} 天`
+                                : "完成今天的记录"}
+                              <ArrowRight aria-hidden="true" />
+                            </Button>
+                            {!isDemoSession ? (
+                              <div className="mt-2 flex flex-wrap gap-2">
+                                <Button
+                                  onClick={skipToday}
+                                  size="sm"
+                                  variant="ghost"
+                                >
+                                  今天跳过
+                                </Button>
+                                <label className="flex items-center gap-2 text-[10px] text-white/55">
+                                  改期到
+                                  <input
+                                    className="h-8 rounded-md border border-white/[0.08] bg-black/20 px-2 text-xs text-white"
+                                    min={new Date().toISOString().slice(0, 10)}
+                                    onChange={(event) =>
+                                      setRescheduleDate(event.target.value)
+                                    }
+                                    type="date"
+                                    value={rescheduleDate}
+                                  />
+                                </label>
+                                <Button
+                                  disabled={!rescheduleDate}
+                                  onClick={rescheduleToday}
+                                  size="sm"
+                                  variant="ghost"
+                                >
+                                  保存改期
+                                </Button>
+                              </div>
+                            ) : null}
+                          </>
+                        );
+                      })()}
+                    </div>
+                  )
                 ) : (
                   <div className="mt-4">
                     <p className="text-muted-foreground text-xs leading-5">
@@ -1035,7 +1360,9 @@ export function ResultPreview({
                         role="status"
                       >
                         <p className="text-xs font-medium text-blue-100">
-                          已记录演示反馈：
+                          {isDemoSession
+                            ? "已记录演示反馈："
+                            : "七天后的证据结论："}
                           {
                             feedbackOptions.find(
                               (option) => option.key === experimentRun.feedback
@@ -1050,7 +1377,9 @@ export function ResultPreview({
                           {experiment.nextStep[experimentRun.feedback]}
                         </p>
                         <p className="text-muted-foreground mt-3 border-t border-white/[0.08] pt-3 text-[10px] leading-4">
-                          这是演示反馈，不会真的等待七天，也不会在后台持续跟踪。
+                          {isDemoSession
+                            ? "这是演示反馈，不会真的等待七天，也不会在后台持续跟踪。"
+                            : `实验开始前你的判断是「${assumptionResultLabel}」，七天记录后的结论是「${feedbackOptions.find((option) => option.key === experimentRun.feedback)?.label}」。`}
                         </p>
                       </div>
                     ) : null}
@@ -1060,24 +1389,94 @@ export function ResultPreview({
             ) : (
               <>
                 <p className="text-muted-foreground mt-4 text-xs leading-5">
-                  现在开始，先推进第一天；进度会保存到这条匿名
-                  session，刷新后不会丢。
+                  {isDemoSession
+                    ? "现在开始，先推进第一天；这份演示状态会保存在本地，刷新后不会丢。"
+                    : "从今天开始记录第 1 天。之后每天按真实日期解锁，记录只保存在这个浏览器。"}
                 </p>
                 <Button
                   className="mt-4 w-full"
                   onClick={startRealityExperiment}
                 >
-                  开始七天实验
+                  {isDemoSession ? "开始演示七天模拟" : "开始真实七天记录"}
                   <FlaskConical aria-hidden="true" />
                 </Button>
               </>
             )}
+            {!isDemoSession && experimentRun?.status === "active" ? (
+              <div className="mt-5 border-t border-white/[0.08] pt-4">
+                <p className="text-world-leap text-[10px] font-medium">
+                  提前停止实验
+                </p>
+                <p className="text-muted-foreground mt-1 text-[10px] leading-4">
+                  停止不是失败。请留下一句原因，让未来回看时知道为什么没有继续。
+                </p>
+                <div className="mt-2 flex gap-2">
+                  <input
+                    className="h-9 min-w-0 flex-1 rounded-lg border border-white/[0.08] bg-black/20 px-3 text-xs text-white"
+                    maxLength={240}
+                    onChange={(event) => setStopReason(event.target.value)}
+                    placeholder="例如：工作突发项目，无法继续保证时间"
+                    value={stopReason}
+                  />
+                  <Button
+                    disabled={!stopReason.trim()}
+                    onClick={stopCurrentExperiment}
+                    size="sm"
+                    variant="outline"
+                  >
+                    停止
+                  </Button>
+                </div>
+              </div>
+            ) : null}
             {experimentError ? (
               <p className="text-world-leap mt-3 text-xs" role="alert">
                 {experimentError}
               </p>
             ) : null}
           </div>
+          {!isDemoSession ? (
+            <div className="mt-4 flex flex-wrap gap-2 border-t border-white/[0.08] pt-4">
+              <Button
+                onClick={downloadExperimentRecord}
+                size="sm"
+                variant="ghost"
+              >
+                <Download aria-hidden="true" />
+                导出我的实验记录
+              </Button>
+              {showDeleteConfirm ? (
+                <>
+                  <span className="text-world-leap self-center text-[10px]">
+                    将删除这次推演和实验，无法恢复。
+                  </span>
+                  <Button
+                    onClick={deleteCurrentSession}
+                    size="sm"
+                    variant="destructive"
+                  >
+                    确认删除
+                  </Button>
+                  <Button
+                    onClick={() => setShowDeleteConfirm(false)}
+                    size="sm"
+                    variant="ghost"
+                  >
+                    取消
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  onClick={() => setShowDeleteConfirm(true)}
+                  size="sm"
+                  variant="ghost"
+                >
+                  <Trash2 aria-hidden="true" />
+                  删除本次本地记录
+                </Button>
+              )}
+            </div>
+          ) : null}
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
             <div className="rounded-2xl border border-white/[0.08] p-4">
               <p className="text-muted-foreground flex items-center gap-2 text-[10px]">
