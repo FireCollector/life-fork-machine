@@ -1,4 +1,5 @@
 export * from "./content";
+export * from "./decision-archive";
 export * from "./demo-route";
 export * from "./engine";
 export * from "./evidence-review";

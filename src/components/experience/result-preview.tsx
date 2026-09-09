@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   AlertTriangle,
+  Archive,
   BadgeCheck,
   ArrowLeft,
   ArrowRight,
@@ -594,12 +595,20 @@ export function ResultPreview({
   return (
     <PageFrame
       actions={
-        <Button asChild size="sm" variant="ghost">
-          <Link href={`/play/${sessionId}`}>
-            <ArrowLeft aria-hidden="true" />
-            返回推演
-          </Link>
-        </Button>
+        <>
+          <Button asChild size="sm" variant="ghost">
+            <Link href="/archive">
+              <Archive aria-hidden="true" />
+              决策档案
+            </Link>
+          </Button>
+          <Button asChild size="sm" variant="ghost">
+            <Link href={`/play/${sessionId}`}>
+              <ArrowLeft aria-hidden="true" />
+              返回推演
+            </Link>
+          </Button>
+        </>
       }
       description="不是最佳答案，也不是成功率预测。这张地图把你实际承担的代价与两条未走路径的情景剖面放在同一张纸上。"
       eyebrow={`04 / ${world.name.toUpperCase()} / ${sessionId.slice(0, 8).toUpperCase()}`}

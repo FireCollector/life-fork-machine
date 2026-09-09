@@ -496,6 +496,33 @@ export const ExperimentAdjustmentStatusSchema = z.enum([
 ]);
 const CalendarDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 
+export const DecisionReviewKindSchema = z.enum([
+  "seven_day",
+  "thirty_day",
+  "custom"
+]);
+export const DecisionReviewSchema = z
+  .object({
+    id: z.string().min(1),
+    kind: DecisionReviewKindSchema,
+    dueOn: CalendarDateSchema,
+    status: z.enum(["scheduled", "completed"]),
+    createdAt: z.string().datetime(),
+    completedAt: z.string().datetime().optional(),
+    whatHappened: z.string().min(1).max(600).optional(),
+    differenceFromThen: z.string().min(1).max(600).optional()
+  })
+  .strict();
+
+export const DecisionLineageSchema = z
+  .object({
+    rootSessionId: z.string().min(1),
+    parentSessionId: z.string().min(1),
+    newInformation: z.string().min(1).max(600),
+    branchedAt: z.string().datetime()
+  })
+  .strict();
+
 export const ExperimentAdjustmentSchema = z
   .object({
     id: z.string().min(1),
@@ -603,6 +630,8 @@ export const GameSessionSchema = z
     blastedAssumptionId: z.string().optional(),
     assumptionEvidenceId: z.string().optional(),
     assumptionResult: AssumptionResultKindSchema.optional(),
+    decisionLineage: DecisionLineageSchema.optional(),
+    decisionReviews: z.array(DecisionReviewSchema).max(12).optional(),
     experimentRun: ExperimentRunSchema.optional(),
     seed: z.number().int().nonnegative(),
     createdAt: z.string().datetime(),
@@ -628,6 +657,9 @@ export type Feeling = z.infer<typeof FeelingSchema>;
 export type EvidenceSignal = z.infer<typeof EvidenceSignalSchema>;
 export type ExperimentBlocker = z.infer<typeof ExperimentBlockerSchema>;
 export type ExperimentAdjustment = z.infer<typeof ExperimentAdjustmentSchema>;
+export type DecisionReview = z.infer<typeof DecisionReviewSchema>;
+export type DecisionReviewKind = z.infer<typeof DecisionReviewKindSchema>;
+export type DecisionLineage = z.infer<typeof DecisionLineageSchema>;
 export type AssumptionCheck = z.infer<typeof AssumptionCheckSchema>;
 export type CalibrationAnswers = z.infer<typeof CalibrationAnswersSchema>;
 export type CommitmentLedger = z.infer<typeof CommitmentLedgerSchema>;

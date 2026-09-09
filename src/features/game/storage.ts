@@ -74,6 +74,19 @@ export function deleteSession(
   notifyLocalChange();
 }
 
+/** Read every valid local game session. Consumers decide which sessions belong in their view. */
+export function listSessions(storage: Storage): GameSession[] {
+  const sessions: GameSession[] = [];
+  for (let index = 0; index < storage.length; index += 1) {
+    const key = storage.key(index);
+    if (!key?.startsWith(SESSION_STORAGE_PREFIX)) continue;
+    const sessionId = key.slice(SESSION_STORAGE_PREFIX.length);
+    const session = loadSession(storage, sessionId);
+    if (session) sessions.push(session);
+  }
+  return sessions;
+}
+
 export function loadSession(
   storage: Pick<Storage, "getItem" | "removeItem">,
   sessionId: string

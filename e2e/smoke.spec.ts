@@ -40,6 +40,19 @@ test("topic lab switches presets and validates arbitrary topic drafts", async ({
   await expect(page.getByText("需要审核").first()).toBeVisible();
 });
 
+test("decision archive starts local-only and does not mistake fixed demos for personal history", async ({
+  page
+}) => {
+  await page.goto("/archive");
+  await expect(
+    page.getByRole("heading", { name: "把每一次决定，留给未来的你。" })
+  ).toBeVisible();
+  await expect(page.getByText("还没有可回看的决策")).toBeVisible();
+  await expect(
+    page.getByText("固定 Demo 不会混进你的个人档案。")
+  ).toBeVisible();
+});
+
 test("evidence review enforces approval gate and version lock", async ({
   page
 }) => {
@@ -57,7 +70,7 @@ test("evidence review enforces approval gate and version lock", async ({
   for (let index = 0; index < 3; index += 1) {
     await approveButtons.nth(index).click();
   }
-  for (let index = 3; index < await rejectButtons.count(); index += 1) {
+  for (let index = 3; index < (await rejectButtons.count()); index += 1) {
     await rejectButtons.nth(index).click();
   }
 
@@ -78,6 +91,7 @@ const routes = [
   "/calibrate",
   "/forge",
   "/topic-lab",
+  "/archive",
   "/play/demo",
   "/result/demo"
 ];
