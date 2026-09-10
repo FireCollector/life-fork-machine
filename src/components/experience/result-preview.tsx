@@ -25,7 +25,8 @@ import {
   ShieldAlert,
   Target,
   Trash2,
-  Download
+  Download,
+  PenLine
 } from "lucide-react";
 
 import { OutcomeRadar } from "@/components/experience/outcome-radar";
@@ -65,6 +66,10 @@ import {
   type SourceCard
 } from "@/features/game";
 import { useStoredSession } from "@/features/game/use-stored-session";
+import {
+  ZHIHU_EXPRESSION_HANDOFF_KEY,
+  ZhihuExpressionSeedSchema
+} from "@/features/zhihu-expression";
 
 function addCalendarDays(date: string, days: number) {
   const value = new Date(`${date}T12:00:00.000Z`);
@@ -323,6 +328,34 @@ export function ResultPreview({
       { label: "证据进度", value: `${experimentRun?.evidenceScore ?? 0} / 100` }
     ]
   };
+
+  function openZhihuExpressionDraft() {
+    const seed = ZhihuExpressionSeedSchema.parse({
+      version: 1,
+      topic: scenario.title,
+      route: world.name,
+      actions: chosenActions.map((action) => action.label),
+      assumption: shareCardData.assumptionLabel,
+      experiment: {
+        title: experiment.title,
+        question: experiment.question,
+        status: shareCardData.experimentStatus,
+        evidenceProgress: shareCardData.evidenceScore,
+        nextStep: shareCardData.nextStep,
+        feedback: experimentRun?.feedback
+      },
+      sources: keySources.map((source) => ({
+        title: source.title,
+        author: source.author,
+        url: source.url
+      }))
+    });
+    window.localStorage.setItem(
+      ZHIHU_EXPRESSION_HANDOFF_KEY,
+      JSON.stringify(seed)
+    );
+    router.push("/zhihu-draft");
+  }
 
   async function copyResult() {
     try {
@@ -1767,6 +1800,27 @@ export function ResultPreview({
       </div>
 
       <ShareResultCard data={shareCardData} />
+
+      <section className="border-zhihu/25 bg-zhihu/[0.04] stage-reveal mt-6 rounded-3xl border p-5 sm:p-7">
+        <p className="text-xs tracking-[0.16em] text-blue-200 uppercase">
+          Zhihu expression draft
+        </p>
+        <h2 className="mt-2 text-xl font-semibold">
+          把这次验证，整理成你自己的知乎回答草稿。
+        </h2>
+        <p className="text-muted-foreground mt-3 max-w-2xl text-sm leading-6">
+          只带入路线、已选行动、实验进展和已引用来源；个人备注、会话
+          ID、账号信息不会带过去。草稿仍需你自行编辑、做隐私检查和发布。
+        </p>
+        <Button
+          className="mt-5"
+          onClick={openZhihuExpressionDraft}
+          variant="secondary"
+        >
+          <PenLine aria-hidden="true" />
+          整理为知乎回答草稿
+        </Button>
+      </section>
 
       <section aria-labelledby="sources-title" className="stage-reveal mt-6">
         <div>
