@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   ArrowRight,
@@ -59,6 +60,7 @@ type ScenarioResponse = {
 };
 
 export function TopicLab() {
+  const router = useRouter();
   const [input, setInput] = useState<string>(TOPIC_PRESETS[0].input);
   const [draft, setDraft] = useState<TopicDraft>(() =>
     generateTopicDraft(TOPIC_PRESETS[0].input)
@@ -268,6 +270,18 @@ export function TopicLab() {
     } finally {
       setIsBuildingScenario(false);
     }
+  }
+
+  function handoffCandidateToCreator() {
+    if (!candidateScenario || evidence?.status !== "ready") {
+      setScenarioNotice("请先生成候选场景和完整来源，再交给 Creator Studio。 ");
+      return;
+    }
+    window.localStorage.setItem(
+      "life-fork-machine:creator-import:v1",
+      JSON.stringify({ pack: candidateScenario.pack, sources: evidence.items })
+    );
+    router.push("/creator");
   }
 
   return (
@@ -500,6 +514,26 @@ export function TopicLab() {
                 pack={candidateScenario.pack}
                 validation={candidateScenario.validation}
               />
+              <section className="border-world-bridge/20 bg-world-bridge/[0.04] rounded-3xl border p-5 sm:p-6">
+                <p className="text-world-bridge text-xs tracking-[0.16em] uppercase">
+                  Editorial handoff
+                </p>
+                <h2 className="mt-2 text-xl font-semibold">
+                  把候选草稿和来源快照交给 Creator Studio。
+                </h2>
+                <p className="text-muted-foreground mt-3 text-sm leading-6">
+                  这里不会直接发布。Creator Studio 会保留
+                  AI/规则初稿、人工改动和来源原文入口，再按审核流程发布版本。
+                </p>
+                <Button
+                  className="mt-5"
+                  onClick={handoffCandidateToCreator}
+                  variant="secondary"
+                >
+                  <FileCheck2 aria-hidden="true" />
+                  交给 Creator Studio
+                </Button>
+              </section>
               {evidence?.status === "ready" ? (
                 <DynamicNarrativePanel
                   brief={brief}
