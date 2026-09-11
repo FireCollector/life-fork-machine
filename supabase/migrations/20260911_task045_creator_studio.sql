@@ -70,6 +70,13 @@ security definer
 set search_path = public
 as $$
 begin
+  if new.id <> old.id or new.scenario_key <> old.scenario_key or new.version <> old.version or
+     new.created_by <> old.created_by or new.created_at <> old.created_at then
+    raise exception 'scenario identity and authorship are immutable';
+  end if;
+  if new.original_pack <> old.original_pack or new.source_snapshot <> old.source_snapshot then
+    raise exception 'the original draft and source snapshot are immutable';
+  end if;
   if old.status = 'retired' and new.status <> old.status then
     raise exception 'retired versions are immutable; create a new draft to restore content';
   end if;

@@ -34,3 +34,5 @@ Use a publisher role for people who can make content public and editor for peopl
 ## Version and session boundary
 
 Each published item is an immutable version under one `scenario_key`. A later correction is a new version, not an overwrite. Existing user decision sessions already contain their own game-state snapshots, so content operations cannot rewrite past choices or reports. Integrating a published Candidate ScenarioPack as a new playable runtime scenario is deliberately a later compilation task; it must preserve this same version reference.
+
+The imported AI/规则初稿 and source snapshot are immutable from the moment a draft is created. Editors can change only the working pack and stated reason, which keeps the displayed diff and audit trail meaningful.
